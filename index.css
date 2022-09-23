@@ -1,0 +1,36 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --size: 20px;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  max-width: 1200px;
+  /* margin: 50px auto; */
+  /* border: 1px solid gray; */
+  height: 100vh;
+}
+
+.cup {
+  position: relative;
+  border: 1px solid darkcyan;
+}
+
+.block {
+  position: absolute;
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  border: 1px solid black;
+}
+
+.cup_block {
+  background-color: darkgoldenrod;
+  border: 1px solid rgb(97, 70, 2);
+}
