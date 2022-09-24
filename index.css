@@ -9,13 +9,8 @@
 }
 
 .container {
-  display: flex;
-  justify-content: center;
-  max-width: 1200px;
-  /* margin: 50px auto; */
-  margin-top: 50px;
-  /* border: 1px solid gray; */
-  height: 100vh;
+  position: relative;
+  margin: 50px auto;
 }
 
 .cup {
@@ -28,11 +23,11 @@
   display: block;
   width: var(--size);
   height: var(--size);
-  border: 1px solid black;
-  background-color: white;
+  /* border: 1px solid black; */
+  /* background-color: white; */
 }
 
 .cup_block {
   background-color: darkgoldenrod;
-  border: 1px solid rgb(97, 70, 2);
+  /* border: 1px solid rgb(97, 70, 2); */
 }

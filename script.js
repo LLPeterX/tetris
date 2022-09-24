@@ -3,53 +3,66 @@ console.log("hello");
 const TILE_SIZE = 20; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = 10; // внутренняя ширина стакана в блоках
 const HEIGHT = 20; // внутренняя высота стакана в блоках
-const defaultColor = "white";
+const defaultColor = "black";
 let game = new Array(HEIGHT); // игровое поле
+// game = game.map(row => new Array(WIDTH).fill(false)); // in clearGame()
+const container = document.querySelector('.container');
+container.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
+container.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
+const cup = document.querySelector('.cup');
+let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
+
 
 const tiles = [
   {
     shape: ['XXXX'],
-    color: "darkcyan",
-
+    color: "#00F0F0",
+    border: "#00D0D0",
   },
   {
     shape: [
       'X  ',
       'XXX'
     ],
-    color: "darkblue"
+    color: "#C0C0FF",
+    border: "#8080D0"
   },
   {
     shape: [
       '  X',
       'XXX'
     ],
-    color: "pink"
+    color: "#F0A000",
+    border: "#C08800",
   },
   {
     shape: ['XX', 'XX'],
-    color: "yellow"
+    color: "#F0F000",
+    border: "#d8d800"
   },
   {
     shape: [
       ' XX',
       'XX '
     ],
-    color: "green"
+    color: "#00F000",
+    border: "#00d800"
   },
   {
     shape: [
       ' X ',
       'XXX'
     ],
-    color: "black"
+    color: "#ff93ff",
+    border: "#C000F0"
   },
   {
     shape: [
       'XX ',
       ' XX'
     ],
-    color: "red"
+    color: "#f00000",
+    border: "#C80000"
   }
 
 ];
@@ -57,7 +70,7 @@ const tiles = [
 // нарисовать "стакан"
 function drawCup() {
   const cup = document.querySelector(".cup");
-  for (let col = 0; col < HEIGHT + 1; col++) {
+  for (let col = 0; col < HEIGHT; col++) {
     for (let row = 0; row < WIDTH + 2; row++) {
       let block = document.createElement('div');
       block.classList.add("block");
@@ -69,6 +82,7 @@ function drawCup() {
         // block.setAttribute("data-x", row - 1);
         // block.setAttribute("data-y", col);
         block.setAttribute("data-xy", `${col},${row - 1}`);
+        block.style.background = defaultColor;
       }
       cup.appendChild(block);
     }
@@ -79,37 +93,52 @@ function drawCup() {
     block.classList.add("block");
     block.classList.add("cup_block");
     block.style.left = `${row * TILE_SIZE}px`;
-    block.style.top = `${(HEIGHT + 1) * TILE_SIZE}px`;
+    block.style.top = `${(HEIGHT) * TILE_SIZE}px`;
     cup.appendChild(block);
   }
+  const cupSizes = cup.getBoundingClientRect();
+  cupInnerLeft = cupSizes.left + TILE_SIZE;
+  cupInnerTop = cupSizes.top;
+  cupInnterBottom = cupSizes.top + TILE_SIZE * HEIGHT;
+  cupInnerRight = cupSizes.right - TILE_SIZE;
 }
 
-function drawTile(id, col = Math.floor(WIDTH / 2), row = 0) {
-  const t = tiles[id];
-  for (let y = 0; y < t.length; y++) {
-    for (let x = 0; x < t[0].length; x++) {
-      if (t[y][x] === 'X') {
-        // получить нужный DIV и происвоить ему цвет t.color, также game[y][x] = true
-        // const selector = `[data-x="${x}"][data-y="${y}"]`;
-        const selector = `[data-xy="${col},${row - 1}"]`;
-        const e = document.querySelector(selector);
-        if (e) {
-          e.style.backgroundColor = t.color;
-        }
+
+
+function clearGame() {
+  game.forEach(row => new Array(WIDTH).fill(false));
+}
+
+function drawBlock(row, col, color, border) {
+  let x = cupInnerLeft + col * TILE_SIZE + 1;
+  let y = cupInnerTop + row * TILE_SIZE + 1;
+  let e = document.elementFromPoint(x, y);
+  e.style.background = color;
+  e.style.border = `1px solid ${border}`;
+}
+
+function drawTile(top, left, tile) {
+  for (let i = 0; i < tile.shape.length; i++) {
+    for (let j = 0; j < tile.shape[0].length; j++) {
+      if (tile.shape[i][j] === 'X') {
+        let row = i + top;
+        let col = j + left;
+        drawBlock(row, col, tile.color, tile.border);
       }
     }
   }
-}
 
-function clearGame() {
-  for (let y = 0; y < HEIGHT; y++) {
-    game[y] = new Array(WIDTH).map(x => false);
-  }
 }
 
 drawCup();
 clearGame();
-drawTile(1);
+drawTile(0, 0, tiles[5]);
+
+// let x =
+//console.log('cupL:', cup.getBoundingClientRect().left);
+//  console.log(cupInnerLeft, cupInnerRight, cupInnerTop, cupInnterBottom);
+//drawBlock(0, 0, 'red');
+
 
 
 
