@@ -12,6 +12,7 @@ const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
 let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
+let intervalId = null;
 
 
 const tiles = [
@@ -130,8 +131,22 @@ function drawTile(top, left, tile) {
 
 }
 
+// повернуть фигуру по часовой стрелке (вправо)
+// top/left - координаты левого верхнего угла фигуры
+function rotateTileCW(top, left, tile) {
+  const newShape = [...tile.shape];
+
+
+}
+
+// повернуть фигуру против часовой столки (влево)
+function totateTileCCW(top, left, tile) {
+
+}
+
 drawCup();
 clearGame();
+drawTile(0, Math.floor(WIDTH / 2 - tiles[1].shape[0].length / 2), tiles[1]);
 // drawTile(0, 0, tiles[0]);
 /* 
   --- Игоровой процесс: ----
