@@ -8,60 +8,62 @@ const SPEED_DECREMENT = 5; // с каждым удаленным рядом за
 const defaultColor = "black"; // цвет заливки стакана
 let game = new Array(HEIGHT); // игровое поле. true - там есть блок, false - нет.
 const container = document.querySelector('.container');
+const button = document.querySelector('.start-button');
 const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
 let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
 let intervalId = null;
+let inGame = false;
 
 
 const tiles = [
   {
-    shape: ['XXXX'],
+    shape: [[1, 1, 1, 1]],
     color: "#00F0F0",
     border: "#00D0D0",
   },
   {
     shape: [
-      'X  ',
-      'XXX'
+      [1, 0, 0],
+      [1, 1, 1]
     ],
     color: "#C0C0FF",
     border: "#8080D0"
   },
   {
     shape: [
-      '  X',
-      'XXX'
+      [0, 0, 1],
+      [1, 1, 1]
     ],
     color: "#F0A000",
     border: "#C08800",
   },
   {
-    shape: ['XX', 'XX'],
+    shape: [[1, 1], [1, 1]],
     color: "#F0F000",
     border: "#d8d800"
   },
   {
     shape: [
-      ' XX',
-      'XX '
+      [0, 1, 1],
+      [1, 1, 0]
     ],
     color: "#00F000",
     border: "#00d800"
   },
   {
     shape: [
-      ' X ',
-      'XXX'
+      [0, 1, 0],
+      [1, 1, 1]
     ],
     color: "#ff93ff",
     border: "#C000F0"
   },
   {
     shape: [
-      'XX ',
-      ' XX'
+      [1, 1, 0],
+      [0, 1, 1]
     ],
     color: "#f00000",
     border: "#C80000"
@@ -96,6 +98,8 @@ function drawCup() {
     block.style.top = `${(HEIGHT) * TILE_SIZE}px`;
     cup.appendChild(block);
   }
+  // ниже все в пикселях
+  // нельзя скроллить вверх, иначе cupSizes.top < 0 - х.з. как бороться
   const cupSizes = cup.getBoundingClientRect();
   cupInnerLeft = cupSizes.left + TILE_SIZE;
   cupInnerTop = cupSizes.top;
@@ -121,7 +125,7 @@ function drawBlock(row, col, color, border) {
 function drawTile(top, left, tile) {
   for (let i = 0; i < tile.shape.length; i++) {
     for (let j = 0; j < tile.shape[0].length; j++) {
-      if (tile.shape[i][j] === 'X') {
+      if (tile.shape[i][j]) {
         let row = i + top;
         let col = j + left;
         drawBlock(row, col, tile.color, tile.border);
@@ -137,6 +141,7 @@ function rotateTileCW(top, left, tile) {
   const newShape = [...tile.shape];
 
 
+
 }
 
 // повернуть фигуру против часовой столки (влево)
@@ -146,8 +151,10 @@ function totateTileCCW(top, left, tile) {
 
 drawCup();
 clearGame();
-drawTile(0, Math.floor(WIDTH / 2 - tiles[1].shape[0].length / 2), tiles[1]);
-// drawTile(0, 0, tiles[0]);
+// get random tile
+const tileId = Math.floor(Math.random() * tiles.length);
+drawTile(0, Math.floor(WIDTH / 2 - tiles[tileId].shape[0].length / 2), tiles[tileId]);
+//drawTile(0, 0, tiles[0]);
 /* 
   --- Игоровой процесс: ----
   1. Нарисовать случайную фигуру вверху по центру
@@ -167,5 +174,14 @@ drawTile(0, Math.floor(WIDTH / 2 - tiles[1].shape[0].length / 2), tiles[1]);
       
  */
 
+function handleClick() {
+  inGame = !inGame;
+  if (!inGame) {
+    clearGame();
+  }
+  button.innerHTML = inGame ? "STOP" : "START";
 
+}
+
+button.addEventListener('click', handleClick);
 
