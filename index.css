@@ -13,6 +13,7 @@
   justify-content: center;
   max-width: 1200px;
   /* margin: 50px auto; */
+  margin-top: 50px;
   /* border: 1px solid gray; */
   height: 100vh;
 }
@@ -28,6 +29,7 @@
   width: var(--size);
   height: var(--size);
   border: 1px solid black;
+  background-color: white;
 }
 
 .cup_block {
