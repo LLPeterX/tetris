@@ -57,7 +57,7 @@
   width: calc(var(--size) * var(--width) + var(--size) + var(--size));
   height: var(--size);
 }
-.inner {
+.game_field {
   position: absolute;
   top: 0;
   left: var(--size);

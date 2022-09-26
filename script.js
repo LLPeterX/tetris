@@ -1,18 +1,22 @@
 console.log("hello");
 
-const TILE_SIZE = 20; // размер одного блока в пикселях (см. --size в style.css)
-const WIDTH = 10; // внутренняя ширина стакана в блоках
-const HEIGHT = 20; // внутренняя высота стакана в блоках
+const cupRect = document.querySelector('.cup_wall_left');
+const gameRect = document.querySelector('.game_field');
+console.log('gameRect:', gameRect);
+
+const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
+const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
+const HEIGHT = gameRect.getBoundingClientRect().height / TILE_SIZE // внутренняя высота стакана в блоках
 const INITIAL_SPEED = 600; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
 const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 const defaultColor = "black"; // цвет заливки стакана
 let game = new Array(HEIGHT); // игровое поле. true - там есть блок, false - нет.
-const container = document.querySelector('.container');
+// const container = document.querySelector('.container');
 const button = document.querySelector('.start-button');
 const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
-let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
+// let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
 let intervalId = null;
 let inGame = false;
 
