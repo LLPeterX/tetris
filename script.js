@@ -16,7 +16,7 @@ cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
 let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
 let intervalId = null;
 let inGame = false;
-let game = new Array(HEIGHT); // игровое поле. true - там есть блок, false - нет.
+let game = null; // игровое поле. true - там есть блок, false - нет. Иницифлизируется в initGame()
 let currentTile = null; // текущая падающая фигура
 
 // первый элемент - ячейка фона
@@ -24,12 +24,14 @@ const tiles = [
   {
     shape: [],
     color: defaultColor,
-    border: "#484848"
+    border: "#484848",
+    id: 0
   },
   {
     shape: [[1, 1, 1, 1]],
     color: "#00F0F0",
     border: "#00D0D0",
+    id: 1
   },
   {
     shape: [
@@ -37,7 +39,8 @@ const tiles = [
       [1, 1, 1]
     ],
     color: "#C0C0FF",
-    border: "#8080D0"
+    border: "#8080D0",
+    id: 2
   },
   {
     shape: [
@@ -46,11 +49,13 @@ const tiles = [
     ],
     color: "#F0A000",
     border: "#C08800",
+    id: 3
   },
   {
     shape: [[1, 1], [1, 1]],
     color: "#F0F000",
-    border: "#d8d800"
+    border: "#d8d800",
+    id: 4
   },
   {
     shape: [
@@ -58,7 +63,8 @@ const tiles = [
       [1, 1, 0]
     ],
     color: "#00F000",
-    border: "#00d800"
+    border: "#00d800",
+    id: 5
   },
   {
     shape: [
@@ -66,7 +72,8 @@ const tiles = [
       [1, 1, 1]
     ],
     color: "#ff93ff",
-    border: "#C000F0"
+    border: "#C000F0",
+    id: 6
   },
   {
     shape: [
@@ -74,7 +81,8 @@ const tiles = [
       [0, 1, 1]
     ],
     color: "#f00000",
-    border: "#C80000"
+    border: "#C80000",
+    id: 7
   }
 
 ];
@@ -84,7 +92,7 @@ const tiles = [
 // очистить игровое поле (внутренности стакана). 
 // содержимое - индекс tiles[]. Если фон, то 0
 function initGame() {
-  game.forEach(row => new Array(WIDTH).fill(0));
+  game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill().map(x => 0));
   gameRect.innerHTML = null;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
@@ -113,19 +121,42 @@ function getRandomTile() {
 //   e.style.border = `1px solid ${border}`;
 // }
 
-// // нарисовать фигуру [состоящую из блоков]
-// function drawTile(top, left, tile) {
-//   for (let i = 0; i < tile.shape.length; i++) {
-//     for (let j = 0; j < tile.shape[0].length; j++) {
-//       if (tile.shape[i][j]) {
-//         let row = i + top;
-//         let col = j + left;
-//         drawBlock(row, col, tile.color, tile.border);
-//       }
-//     }
-//   }
 
-// }
+// проверка - можно ли разместить текущую фигуру по указанным координатам
+function canPlace(top, left) {
+  if (top < 0 || top >= HEIGHT || left < 0 || left + currentTile.shape[0].length) {
+    return false;
+  }
+  // есть ли пересечения с другими фигурами?
+  for (let i = 0; i < currentTile.shape.length; i++) {
+    for (let j = 0; j < currentTile.shape[0].length; j++) {
+      if (currentTile.shape[i][j]) {
+        let row = i + top;
+        let col = j + left;
+        if (game[row][col]) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// нарисовать текущую фигуру (впихнуть в массив game)
+// left/top - координаты левого верхнего угла фигуры.
+// если y<0 (при повороте), сместить вниз пока не будет видна вся фигура
+function drawTile(top, left) {
+  for (let i = 0; i < currentTile.shape.length; i++) {
+    for (let j = 0; j < currentTile.shape[0].length; j++) {
+      if (currentTile.shape[i][j]) {
+        let row = i + top;
+        let col = j + left;
+        game[row][col] = currentTile.id;
+      }
+    }
+  }
+
+}
 
 // повернуть фигуру по часовой стрелке (вправо)
 // top/left - координаты левого верхнего угла фигуры
@@ -142,14 +173,21 @@ function totateTileCCW(top, left, tile) {
 }
 
 function grawGame() {
+  let blocks = gameRect.children;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
-
+      let x = row * HEIGHT + col
+      let e = blocks[x];
+      if (e) {
+        e.innerHTML = game[row][col];
+      }
     }
   }
 }
 
 initGame();
+currentTile = getRandomTile();
+grawGame();
 // drawCup();
 // clearGame();
 // get random tile
