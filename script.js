@@ -1,4 +1,4 @@
-console.log("hello");
+// TODO: реализовать опускание фигуры и очистку блоков, которые она ранее занимала
 
 const cupRect = document.querySelector('.cup_wall_left');
 const gameRect = document.querySelector('.game_field');
@@ -8,7 +8,7 @@ const nextElement = document.querySelector('.next-tile');
 const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
 const HEIGHT = gameRect.getBoundingClientRect().height / TILE_SIZE // внутренняя высота стакана в блоках
-const INITIAL_SPEED = 600; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
+const INITIAL_SPEED = 800; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
 const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 const defaultColor = window.getComputedStyle(gameRect).backgroundColor; // цвет заливки стакана
 const button = document.querySelector('.start-button__btn');
@@ -251,11 +251,21 @@ nextTile = tiles[2];
 placeTile(0, Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2));
 grawGame();
 drawNextTile();
+
+// setInterval(() => {
+//   moveDown();
+//   grawGame();
+// }, INITIAL_SPEED)
+
 console.log('game1', game);
-sleep(1000);
-moveDown();
-console.log('game2', game);
-grawGame();
+// sleep(INITIAL_SPEED);
+// moveDown();
+// grawGame();
+// sleep(INITIAL_SPEED);
+// moveDown();
+// grawGame();
+// console.log('game2', game);
+
 
 
 /* 
