@@ -68,6 +68,8 @@
   display: block;
   width: var(--size);
   height: var(--size);
+  font-size: 12px;
+  color: white;
 }
 
 .cup_block {

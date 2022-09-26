@@ -179,7 +179,7 @@ function grawGame() {
       let x = row * HEIGHT + col
       let e = blocks[x];
       if (e) {
-        e.innerHTML = game[row][col];
+        e.innerHTML = String(game[row][col]);
       }
     }
   }
