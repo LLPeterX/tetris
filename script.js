@@ -114,12 +114,15 @@ function initGame() {
 
 function getRandomTile() {
   let index = Math.floor(Math.random() * (tiles.length - 1)) + 1;
-  return tiles[index];
+  let tile = tiles[index];
+  tile.top = 0;
+  tile.left = Math.floor(HEIGHT / 2 - tile.shape[0].length / 2);
+  return tile;
 }
 
 // проверка - можно ли разместить текущую фигуру по указанным координатам
-function canPlace(top, left) {
-  if (top < 0 || top >= HEIGHT || left < 0 || left + currentTile.shape[0].length) {
+function canPlace(top = 0, left = Math.floor(HEIGHT / 2 - currentTile.shape[0].length / 2)) {
+  if (top < 0 || top >= HEIGHT || left < 0 || left + currentTile.shape[0].length >= WIDTH) {
     return false;
   }
   // есть ли пересечения с другими фигурами?
@@ -141,6 +144,8 @@ function canPlace(top, left) {
 // left/top - координаты левого верхнего угла фигуры.
 // если y<0 (при повороте), сместить вниз пока не будет видна вся фигура
 function placeTile(top, left) {
+  currentTile.top = top;
+  currentTile.left = left;
   for (let i = 0; i < currentTile.shape.length; i++) {
     for (let j = 0; j < currentTile.shape[0].length; j++) {
       if (currentTile.shape[i][j]) {
@@ -173,17 +178,36 @@ function drawNextTile() {
   }
 }
 
-// повернуть фигуру по часовой стрелке (вправо)
-// top/left - координаты левого верхнего угла фигуры
-function rotateTileCW(top, left, tile) {
-  const newShape = [...tile.shape];
-
-
-
+// повернуть текущую фигуру по часовой стрелке (вправо)
+// возвращает true, если успешно, или false если нет.
+function rotateCW() {
+  let result = [];
+  let oldShape = JSON.parse(JSON.stringify(currentTile.shape));
+  currentTile.shape.forEach((row, i) => {
+    row.forEach((col, j, rowx) => {
+      result[rowx.length - j - 1] = result[rowx.length - j - 1] || [];
+      result[rowx.length - j - 1][i] = col;
+    });
+  });
+  if (!canPlace()) {
+    currentTile.shape = oldShape;
+    return false;
+  }
+  return true;
 }
 
 // повернуть фигуру против часовой столки (влево)
-function totateTileCCW(top, left, tile) {
+function totateCCW() {
+  rotateCW();
+  rotateCW();
+  rotateCW();
+}
+
+// сместить фигуру вниз
+function moveDown() {
+  if (canPlace(currentTile.top + 1, currentTile.left)) {
+    placeTile(currentTile.top + 1, currentTile.left);
+  }
 
 }
 
@@ -210,12 +234,29 @@ function grawGame() {
   blocks = null;
 }
 
+function sleep(milliseconds) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
+}
+
+
 initGame();
-currentTile = getRandomTile();
-nextTile = getRandomTile();
+// currentTile = getRandomTile();
+// nextTile = getRandomTile();
+currentTile = tiles[1];
+nextTile = tiles[2];
 placeTile(0, Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2));
 grawGame();
 drawNextTile();
+console.log('game1', game);
+sleep(1000);
+moveDown();
+console.log('game2', game);
+grawGame();
+
 
 /* 
   --- Игоровой процесс: ----
