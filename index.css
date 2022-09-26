@@ -5,7 +5,15 @@
 }
 
 :root {
+  /* размер одного блока */
   --size: 20px;
+  /* высота стакана в пикселях */
+  --height: 20;
+  --width: 10;
+  --cup-outer-height: calc(var(--size) * (var(--height)+1));
+  --cup-outer-width: calc(var(--size) * (var(--width)+2));
+  --wall-color: #e4a558;
+  --wall-height: calc();
 }
 
 .container {
@@ -24,6 +32,38 @@
 .cup {
   position: relative;
   margin: 0 auto;
+}
+
+.cup_wall {
+  width: var(--size);
+  height: 400px;
+  background-color: var(--wall-color);
+  position: absolute;
+}
+
+.cup_wall_left {
+  top: 0;
+  left: 0;
+}
+.cup_wall_right {
+  top: 0;
+  left: calc(var(--size) * (var(--width)) + var(--size));
+}
+.cup_bottom {
+  /* background-color: var(--wall-color);
+  position: absolute; */
+  top: calc(var(--size) * (var(--height)+1));
+  left: 0;
+  width: calc(var(--size) * var(--width) + var(--size) + var(--size));
+  height: var(--size);
+}
+.inner {
+  position: absolute;
+  top: 0;
+  left: var(--size);
+  width: calc(var(--size) * var(--width));
+  height: calc(var(--size) * var(--height));
+  background-color: black;
 }
 
 .block {

@@ -149,12 +149,12 @@ function totateTileCCW(top, left, tile) {
 
 }
 
-drawCup();
-clearGame();
+// drawCup();
+// clearGame();
 // get random tile
-const tileId = Math.floor(Math.random() * tiles.length);
-drawTile(0, Math.floor(WIDTH / 2 - tiles[tileId].shape[0].length / 2), tiles[tileId]);
-//drawTile(0, 0, tiles[0]);
+// const tileId = Math.floor(Math.random() * tiles.length);
+// drawTile(0, Math.floor(WIDTH / 2 - tiles[tileId].shape[0].length / 2), tiles[tileId]);
+
 /* 
   --- Игоровой процесс: ----
   1. Нарисовать случайную фигуру вверху по центру
