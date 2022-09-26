@@ -145,7 +145,7 @@ function canPlace(top, left) {
 // нарисовать текущую фигуру (впихнуть в массив game)
 // left/top - координаты левого верхнего угла фигуры.
 // если y<0 (при повороте), сместить вниз пока не будет видна вся фигура
-function drawTile(top, left) {
+function placeTile(top, left) {
   for (let i = 0; i < currentTile.shape.length; i++) {
     for (let j = 0; j < currentTile.shape[0].length; j++) {
       if (currentTile.shape[i][j]) {
@@ -176,23 +176,24 @@ function grawGame() {
   let blocks = gameRect.children;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
-      let x = row * HEIGHT + col
+      let x = row * WIDTH + col;
       let e = blocks[x];
-      if (e) {
-        e.innerHTML = String(game[row][col]);
+      e.innerHTML = game[row][col]; // TODO: REMOVE !!!
+      if (game[row][col]) {
+        e.style.backgroundColor = currentTile.color;
+        e.style.border = `1px solid ${currentTile.border}`;
       }
+
+
     }
   }
+  blocks = null;
 }
 
 initGame();
 currentTile = getRandomTile();
+placeTile(0, Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2));
 grawGame();
-// drawCup();
-// clearGame();
-// get random tile
-// const tileId = Math.floor(Math.random() * tiles.length);
-// drawTile(0, Math.floor(WIDTH / 2 - tiles[tileId].shape[0].length / 2), tiles[tileId]);
 
 /* 
   --- Игоровой процесс: ----
