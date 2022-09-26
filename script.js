@@ -17,9 +17,15 @@ let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
 let intervalId = null;
 let inGame = false;
 let game = new Array(HEIGHT); // игровое поле. true - там есть блок, false - нет.
+let currentTile = null; // текущая падающая фигура
 
-
+// первый элемент - ячейка фона
 const tiles = [
+  {
+    shape: [],
+    color: defaultColor,
+    border: "#484848"
+  },
   {
     shape: [[1, 1, 1, 1]],
     color: "#00F0F0",
@@ -73,69 +79,53 @@ const tiles = [
 
 ];
 
-// нарисовать "стакан"
-// function drawCup() {
-//   const cup = document.querySelector(".cup");
-//   for (let col = 0; col < HEIGHT; col++) {
-//     for (let row = 0; row < WIDTH + 2; row++) {
-//       let block = document.createElement('div');
-//       block.classList.add("block");
-//       block.style.left = `${row * TILE_SIZE}px`;
-//       block.style.top = `${col * TILE_SIZE}px`;
-//       if (row === 0 || row === WIDTH + 1) { // боковые границы стакана
-//         block.classList.add("cup_block");
-//       } else {
-//         block.setAttribute("data-xy", `${col},${row - 1}`); // только для теста
-//         block.style.background = defaultColor;
-//       }
-//       cup.appendChild(block);
-//     }
-//   }
-//   // bottom
-//   for (let row = 0; row < WIDTH + 2; row++) {
-//     let block = document.createElement('div');
-//     block.classList.add("block");
-//     block.classList.add("cup_block");
-//     block.style.left = `${row * TILE_SIZE}px`;
-//     block.style.top = `${(HEIGHT) * TILE_SIZE}px`;
-//     cup.appendChild(block);
-//   }
-//   // ниже все в пикселях
-//   // нельзя скроллить вверх, иначе cupSizes.top < 0 - х.з. как бороться
-//   const cupSizes = cup.getBoundingClientRect();
-//   cupInnerLeft = cupSizes.left + TILE_SIZE;
-//   cupInnerTop = cupSizes.top;
-//   cupInnterBottom = cupSizes.top + TILE_SIZE * HEIGHT;
-//   cupInnerRight = cupSizes.right - TILE_SIZE;
-// }
 
-// очистить игровое поле (внутренности стакана)
-function clearGame() {
-  game.forEach(row => new Array(WIDTH).fill(false));
-}
 
-// нарисовать 1 клетку
-function drawBlock(row, col, color, border) {
-  let x = cupInnerLeft + col * TILE_SIZE + 1;
-  let y = cupInnerTop + row * TILE_SIZE + 1;
-  let e = document.elementFromPoint(x, y);
-  e.style.background = color;
-  e.style.border = `1px solid ${border}`;
-}
-
-// нарисовать фигуру [состоящую из блоков]
-function drawTile(top, left, tile) {
-  for (let i = 0; i < tile.shape.length; i++) {
-    for (let j = 0; j < tile.shape[0].length; j++) {
-      if (tile.shape[i][j]) {
-        let row = i + top;
-        let col = j + left;
-        drawBlock(row, col, tile.color, tile.border);
-      }
+// очистить игровое поле (внутренности стакана). 
+// содержимое - индекс tiles[]. Если фон, то 0
+function initGame() {
+  game.forEach(row => new Array(WIDTH).fill(0));
+  gameRect.innerHTML = null;
+  for (let row = 0; row < HEIGHT; row++) {
+    for (let col = 0; col < WIDTH; col++) {
+      let cell = document.createElement('div');
+      cell.classList.add('block');
+      cell.style.left = `${col * TILE_SIZE}px`;
+      cell.style.top = `${row * TILE_SIZE}px`;
+      cell.style.backgroundColor = tiles[0].color;
+      cell.style.border = `1px solid ${tiles[0].border}`;
+      gameRect.appendChild(cell);
     }
   }
-
 }
+
+function getRandomTile() {
+  let index = Math.floor(Math.random() * (tiles.length - 1)) + 1;
+  return tiles[index];
+}
+
+// // нарисовать 1 клетку
+// function drawBlock(row, col, color, border) {
+//   let x = cupInnerLeft + col * TILE_SIZE + 1;
+//   let y = cupInnerTop + row * TILE_SIZE + 1;
+//   let e = document.elementFromPoint(x, y);
+//   e.style.background = color;
+//   e.style.border = `1px solid ${border}`;
+// }
+
+// // нарисовать фигуру [состоящую из блоков]
+// function drawTile(top, left, tile) {
+//   for (let i = 0; i < tile.shape.length; i++) {
+//     for (let j = 0; j < tile.shape[0].length; j++) {
+//       if (tile.shape[i][j]) {
+//         let row = i + top;
+//         let col = j + left;
+//         drawBlock(row, col, tile.color, tile.border);
+//       }
+//     }
+//   }
+
+// }
 
 // повернуть фигуру по часовой стрелке (вправо)
 // top/left - координаты левого верхнего угла фигуры
@@ -151,6 +141,15 @@ function totateTileCCW(top, left, tile) {
 
 }
 
+function grawGame() {
+  for (let row = 0; row < HEIGHT; row++) {
+    for (let col = 0; col < WIDTH; col++) {
+
+    }
+  }
+}
+
+initGame();
 // drawCup();
 // clearGame();
 // get random tile
@@ -179,7 +178,7 @@ function totateTileCCW(top, left, tile) {
 function handleClick() {
   inGame = !inGame;
   if (!inGame) {
-    clearGame();
+    initGame();
   }
   button.innerHTML = inGame ? "STOP" : "START";
 
