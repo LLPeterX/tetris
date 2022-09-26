@@ -10,7 +10,7 @@
   /* размеры игрового поля в блоках */
   --height: 20;
   --width: 10;
-  --wall-color: #e4a558;
+  --wall-color: #864d08;
 }
 
 .container {
