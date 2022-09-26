@@ -109,6 +109,7 @@ function initGame() {
       gameRect.appendChild(cell);
     }
   }
+  setScore(0);
 }
 
 function getRandomTile() {
@@ -184,6 +185,11 @@ function rotateTileCW(top, left, tile) {
 // повернуть фигуру против часовой столки (влево)
 function totateTileCCW(top, left, tile) {
 
+}
+
+function setScore(s) {
+  score = s;
+  scoreElement.innerHTML = s;
 }
 
 function grawGame() {

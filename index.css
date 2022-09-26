@@ -16,6 +16,7 @@
 body {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   font-family: "Courier New", Courier, monospace;
 }
 
@@ -79,11 +80,14 @@ body {
 }
 
 .start-button {
-  padding: 8px;
-  margin: 20px;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 24px;
+  margin: 20px auto;
+  justify-self: center;
+}
+.start-button__btn {
+  font-size: 34px;
   font-weight: bold;
+  padding: 10px;
+  background-color: bisque;
 }
 
 .next-tile {
