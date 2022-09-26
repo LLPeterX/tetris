@@ -2,6 +2,8 @@ console.log("hello");
 
 const cupRect = document.querySelector('.cup_wall_left');
 const gameRect = document.querySelector('.game_field');
+const scoreElement = document.getElementById("score");
+const nextElement = document.querySelector('.next-tile');
 
 const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
@@ -10,14 +12,16 @@ const INITIAL_SPEED = 600; // начальная скорость падения
 const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 const defaultColor = window.getComputedStyle(gameRect).backgroundColor; // цвет заливки стакана
 const button = document.querySelector('.start-button');
+// выровнять стакан по центру
 const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
-let cupInnerLeft, cupInnerTop, cupInnterBottom, cupInnerRight;
 let intervalId = null;
 let inGame = false;
 let game = null; // игровое поле. true - там есть блок, false - нет. Иницифлизируется в initGame()
 let currentTile = null; // текущая падающая фигура
+let nextTile = null; // следующая фигура
+let score = 0; // текущий счет
 
 // первый элемент - ячейка фона
 const tiles = [
@@ -112,16 +116,6 @@ function getRandomTile() {
   return tiles[index];
 }
 
-// // нарисовать 1 клетку
-// function drawBlock(row, col, color, border) {
-//   let x = cupInnerLeft + col * TILE_SIZE + 1;
-//   let y = cupInnerTop + row * TILE_SIZE + 1;
-//   let e = document.elementFromPoint(x, y);
-//   e.style.background = color;
-//   e.style.border = `1px solid ${border}`;
-// }
-
-
 // проверка - можно ли разместить текущую фигуру по указанным координатам
 function canPlace(top, left) {
   if (top < 0 || top >= HEIGHT || left < 0 || left + currentTile.shape[0].length) {
@@ -155,7 +149,27 @@ function placeTile(top, left) {
       }
     }
   }
+}
 
+// показать следующую фигуру в блоке 'next'
+function drawNextTile() {
+  if (nextTile) {
+    nextTile.innerHTML = null;
+    for (let row = 0; row < nextTile.shape.length; row++) {
+      for (let col = 0; col < nextTile.shape[0].length; col++) {
+        if (nextTile.shape[row][col]) {
+          let e = document.createElement('div');
+          e.classList.add('block');
+          e.style.backgroundColor = nextTile.color;
+          e.style.border = `1px solid ${nextTile.border}`;
+          e.style.left = `${TILE_SIZE * 3 + TILE_SIZE * col}px`;
+          e.style.top = `${TILE_SIZE * 2 + TILE_SIZE * row}px`;
+          nextElement.appendChild(e);
+        }
+      }
+    }
+
+  }
 }
 
 // повернуть фигуру по часовой стрелке (вправо)
@@ -192,8 +206,10 @@ function grawGame() {
 
 initGame();
 currentTile = getRandomTile();
+nextTile = getRandomTile();
 placeTile(0, Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2));
 grawGame();
+drawNextTile();
 
 /* 
   --- Игоровой процесс: ----

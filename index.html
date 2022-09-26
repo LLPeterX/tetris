@@ -8,16 +8,18 @@
     <title>Тетрис</title>
   </head>
   <body>
+    <h1 class="title">-= TETRIS =-</h1>
     <div class="container">
-      <h1 class="title">-= TETRIS =-</h1>
+      <div class="next-tile">NEXT:</div>
       <div class="cup">
         <div class="cup_wall cup_wall_left"></div>
         <div class="cup_wall cup_wall_right"></div>
         <div class="cup_wall cup_bottom"></div>
         <div class="game_field"></div>
       </div>
-      <button class="start-button">START</button>
+      <div class="score">SCORE: <span id="score">0</span></div>
     </div>
+    <button class="start-button">START</button>
     <script src="script.js"></script>
   </body>
 </html>
