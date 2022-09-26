@@ -82,12 +82,14 @@ body {
 .start-button {
   margin: 20px auto;
   justify-self: center;
+  /* width: calc(var(--size) * var(--width) + var(--size) * 2); */
 }
 .start-button__btn {
-  font-size: 34px;
+  font-size: 24px;
   font-weight: bold;
-  padding: 10px;
+  padding: 10px 30px 10px 30px;
   background-color: bisque;
+  width: calc(var(--size) * var(--width) + var(--size) * 2);
 }
 
 .next-tile {

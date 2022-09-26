@@ -11,7 +11,7 @@ const HEIGHT = gameRect.getBoundingClientRect().height / TILE_SIZE // внутр
 const INITIAL_SPEED = 600; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
 const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 const defaultColor = window.getComputedStyle(gameRect).backgroundColor; // цвет заливки стакана
-const button = document.querySelector('.start-button');
+const button = document.querySelector('.start-button__btn');
 // выровнять стакан по центру
 const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
