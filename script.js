@@ -333,6 +333,31 @@ function drawGame() {
   blocks = null;
 }
 
+// удалить ряд из game[], у которого все ячейки заполнены
+function checkAndRemoveRows() {
+  let found;
+  do {
+    found = false;
+    for (let row = HEIGHT - 1; row >= 0; row--) {
+      if (game[row].every(cell => cell !== 0)) {
+        console.log('remove row', row);
+        // сдвигаем содержимое game[row-1][i] вниз
+        for (let y = row - 1; y >= 0; y--) {
+          for (let x = 0; x < WIDTH; x++) {
+            game[row][x] = game[row - 1][x];
+          }
+        }
+        // зануляем первую строку
+        for (let x = 0; x < WIDTH; x++) {
+          game[0][x] = 0;
+        }
+        found = true;
+        break;
+      }
+    }
+  } while (found);
+}
+
 
 
 
@@ -390,12 +415,19 @@ function handleKey(event) {
     case 'Escape':
       inGame = false;
       initGame();
+      inGame = true;
+      drawGame();
+      currentTile = getRandomTile();
+      placeTile();
+      nextTile = getRandomTile();
+      drawNextTile();
       drawGame();
       break;
   }
   console.log('hit bottom:', hitBottom, 'inGame:', inGame);
   if (hitBottom && inGame) {
     hitBottom = false;
+    checkAndRemoveRows();
     currentTile = { ...nextTile };
     if (canPlace()) {
       placeTile();
