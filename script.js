@@ -1,23 +1,29 @@
-// TODO: реализовать опускание фигуры и очистку блоков, которые она ранее занимала
+/* 
+TODO: 
+- при опускании фигуры не удаляется ряд
+- при повороте фигура снова вверху по центру.
+- периодически зависает - проверить цикл do/while
+
+*/
 
 const cupRect = document.querySelector('.cup_wall_left');
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.getElementById("score");
 const nextElement = document.querySelector('.next-shape');
-
+// ниже все размеры берутся из CSS. Главное чтобы ТАМ было правильно
 const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
 const HEIGHT = gameRect.getBoundingClientRect().height / TILE_SIZE // внутренняя высота стакана в блоках
-const INITIAL_SPEED = 800; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
-const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
-const defaultColor = window.getComputedStyle(gameRect).backgroundColor; // цвет заливки стакана
 const button = document.querySelector('.start-button__btn');
 // выровнять стакан по центру
 const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
+const INITIAL_SPEED = 800; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
+const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
+
 let intervalId = null;
-let inGame = false;
+let inGame = false; // признак что мы в игре
 let game = null; // игровое поле. true - там есть блок, false - нет. Иницифлизируется в initGame()
 let currentTile = null; // текущая падающая фигура
 let nextTile = null; // следующая фигура
@@ -25,14 +31,14 @@ let score = 0; // текущий счет
 let oldTop, oldLeft;
 let hitBottom = false;
 
-// первый элемент - ячейка фона
+// первый элемент массива - ячейка фона
 const tiles = [
   {
     shape: [
       [0, 0, 0, 0],
       [0, 0, 0, 0]
     ],
-    color: defaultColor,
+    color: "#000000",
     border: "#484848",
     id: 0
   },
@@ -100,7 +106,7 @@ const tiles = [
 
 // очистить игровое поле (внутренности стакана). 
 // содержимое - индекс tiles[]. Если фон, то 0
-function initGame() {
+function initGame(withStartTile = false) {
   game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill().map(x => 0));
   gameRect.innerHTML = null;
   for (let row = 0; row < HEIGHT; row++) {
@@ -115,6 +121,13 @@ function initGame() {
     }
   }
   setScore(0);
+  if (withStartTile) {
+    currentTile = getRandomTile();
+    placeTile();
+    nextTile = getRandomTile();
+    drawNextTile();
+    drawGame();
+  }
 }
 
 function getRandomTile() {
@@ -205,18 +218,17 @@ function canMove(direction) {
 // нарисовать текущую фигуру (впихнуть в массив game)
 // left/top - координаты левого верхнего угла фигуры.
 // если y<0 (при повороте), сместить вниз пока не будет видна вся фигура
-function removeTile(top = currentTile.top, left = currentTile.left) {
+function removeTile(tile = currentTile) {
 
-  for (let i = 0; i < currentTile.shape.length; i++) {
-    for (let j = 0; j < currentTile.shape[0].length; j++) {
-      if (currentTile.shape[i][j]) {
-        let row = i + top;
-        let col = j + left;
+  for (let i = 0; i < tile.shape.length; i++) {
+    for (let j = 0; j < tile.shape[0].length; j++) {
+      if (tile.shape[i][j]) {
+        let row = i + tile.top;
+        let col = j + tile.left;
         game[row][col] = 0;
       }
     }
   }
-  console.log(`tile removed at y=${currentTile.top} x=${currentTile.left}`);
 }
 
 function placeTile(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2)) {
@@ -256,29 +268,40 @@ function drawNextTile() {
   }
 }
 
+const copyObject = (obj) => JSON.parse(JSON.stringify(obj));
+
+// вращение массива по часовой стрелке
+const rotateArray = (array) => array[0].map((_, j) => array.map(row => row[j]).reverse());
 // повернуть текущую фигуру по часовой стрелке (вправо)
 // возвращает true, если успешно, или false если нет.
+
 function rotateCW() {
-  let result = [];
-  let oldShape = JSON.parse(JSON.stringify(currentTile.shape));
-  currentTile.shape.forEach((row, i) => {
-    row.forEach((col, j, rowx) => {
-      result[rowx.length - j - 1] = result[rowx.length - j - 1] || [];
-      result[rowx.length - j - 1][i] = col;
-    });
-  });
+  let oldTile = copyObject(currentTile);
+  currentTile.shape = rotateArray(currentTile.shape);
   if (!canPlace()) {
-    currentTile.shape = oldShape;
+    currentTile = oldTile;
     return false;
+  } else {
+    removeTile(oldTile);
+    placeTile(); // тут косяк!
   }
   return true;
 }
 
 // повернуть фигуру против часовой столки (влево)
-function totateCCW() {
-  rotateCW();
-  rotateCW();
-  rotateCW();
+function rotateCCW() {
+  let oldTile = copyObject(currentTile);
+  currentTile.shape = rotateArray(currentTile.shape);
+  currentTile.shape = rotateArray(currentTile.shape);
+  currentTile.shape = rotateArray(currentTile.shape);
+  if (!canPlace()) {
+    currentTile = oldTile;
+    return false;
+  } else {
+    removeTile(oldTile);
+    placeTile();
+  }
+  return true;
 }
 
 // сместить фигуру вниз
@@ -352,6 +375,7 @@ function checkAndRemoveRows() {
           game[0][x] = 0;
         }
         found = true;
+        setScore(score + 10);
         break;
       }
     }
@@ -384,7 +408,7 @@ function checkAndRemoveRows() {
 function handleClick() {
   inGame = !inGame;
   if (!inGame) {
-    initGame();
+    initGame(true);
   }
   button.innerHTML = inGame ? "STOP" : "START";
 }
@@ -397,6 +421,8 @@ function handleKey(event) {
       moveDown();
       break;
     case 'ArrowUp': // rotate CCW
+      console.log(`rotate left`);
+      rotateCCW();
       break;
     case 'ArrowLeft':
       console.log(`move left to Y=${currentTile.top} x=${currentTile.left}`);
@@ -414,7 +440,7 @@ function handleKey(event) {
       break;
     case 'Escape':
       inGame = false;
-      initGame();
+      initGame(true);
       inGame = true;
       drawGame();
       currentTile = getRandomTile();
@@ -448,9 +474,7 @@ document.addEventListener('keydown', handleKey);
 
 /// ---------------- TESTING -----------------
 
-initGame();
-// currentTile = getRandomTile();
-// nextTile = getRandomTile();
+initGame(false);
 // начальные блоки
 currentTile = { ...tiles[1] };
 nextTile = tiles[3];
@@ -464,16 +488,3 @@ drawGame();
 drawNextTile();
 inGame = true;
 
-// setInterval(() => {
-//   moveDown();
-//   grawGame();
-// }, INITIAL_SPEED)
-
-//console.log('game1', game);
-// sleep(INITIAL_SPEED);
-// moveDown();
-// grawGame();
-// sleep(INITIAL_SPEED);
-// moveDown();
-// grawGame();
-// console.log('game2', game);

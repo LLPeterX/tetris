@@ -67,7 +67,6 @@ body {
   left: var(--size);
   width: calc(var(--size) * var(--width));
   height: calc(var(--size) * var(--height));
-  background-color: black;
 }
 
 .block {
