@@ -184,7 +184,7 @@ function canMove(direction) {
         return false;
       }
       for (let y = 0; y < shapeHeight; y++) { // по правому боку
-        if (currentTile.shape[y][currentTile.left + shapeHeight - 1]) {
+        if (currentTile.shape[y][currentTile.left + shapeWidth - 1]) {
           if (game[y + currentTile.top][currentTile.left + shapeWidth]) {
             return false;
           }
