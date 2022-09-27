@@ -3,7 +3,7 @@
 const cupRect = document.querySelector('.cup_wall_left');
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.getElementById("score");
-const nextElement = document.querySelector('.next-tile');
+const nextElement = document.querySelector('.next-shape');
 
 const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
@@ -23,11 +23,15 @@ let currentTile = null; // текущая падающая фигура
 let nextTile = null; // следующая фигура
 let score = 0; // текущий счет
 let oldTop, oldLeft;
+let hitBottom = false;
 
 // первый элемент - ячейка фона
 const tiles = [
   {
-    shape: [],
+    shape: [
+      [0, 0, 0, 0],
+      [0, 0, 0, 0]
+    ],
     color: defaultColor,
     border: "#484848",
     id: 0
@@ -115,14 +119,14 @@ function initGame() {
 
 function getRandomTile() {
   let index = Math.floor(Math.random() * (tiles.length - 1)) + 1;
-  let tile = tiles[index];
+  let tile = { ...tiles[index] };
   tile.top = 0;
-  tile.left = Math.floor(HEIGHT / 2 - tile.shape[0].length / 2);
+  tile.left = Math.floor(WIDTH / 2 - tile.shape[0].length / 2);
   return tile;
 }
 
 // проверка - можно ли разместить текущую фигуру по указанным координатам
-function canPlace(top = 0, left = Math.floor(HEIGHT / 2 - currentTile.shape[0].length / 2)) {
+function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2)) {
   if (top < 0 || top >= HEIGHT || left < 0 || left + currentTile.shape[0].length >= WIDTH) {
     return false;
   }
@@ -138,7 +142,7 @@ function canPlace(top = 0, left = Math.floor(HEIGHT / 2 - currentTile.shape[0].l
       }
     }
   }
-  console.log('can place => true');
+  console.log(`can place ${currentTile.id} => true`);
   return true;
 }
 
@@ -187,6 +191,8 @@ function canMove(direction) {
         }
       }
       break;
+    case 'cw':
+    // поворачиваем матрицу и проверяем, не пересекаются ли фигуры
 
 
 
@@ -213,7 +219,7 @@ function removeTile(top = currentTile.top, left = currentTile.left) {
   console.log(`tile removed at y=${currentTile.top} x=${currentTile.left}`);
 }
 
-function placeTile(top, left) {
+function placeTile(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2)) {
   currentTile.top = top;
   currentTile.left = left;
   for (let i = 0; i < currentTile.shape.length; i++) {
@@ -230,21 +236,23 @@ function placeTile(top, left) {
 // показать следующую фигуру в блоке 'next'
 function drawNextTile() {
   if (nextTile) {
-    nextTile.innerHTML = null;
+    nextElement.innerHTML = null;
     for (let row = 0; row < nextTile.shape.length; row++) {
       for (let col = 0; col < nextTile.shape[0].length; col++) {
+        let e = document.createElement('div');
+        e.classList.add('block');
+        e.style.left = `${TILE_SIZE * 3 + TILE_SIZE * col}px`;
+        e.style.top = `${TILE_SIZE * 2 + TILE_SIZE * row}px`;
         if (nextTile.shape[row][col]) {
-          let e = document.createElement('div');
-          e.classList.add('block');
           e.style.backgroundColor = nextTile.color;
           e.style.border = `1px solid ${nextTile.border}`;
-          e.style.left = `${TILE_SIZE * 3 + TILE_SIZE * col}px`;
-          e.style.top = `${TILE_SIZE * 2 + TILE_SIZE * row}px`;
-          nextElement.appendChild(e);
+          // } else {
+          //   e.style.backgroundColor = tiles[0].color;
+          //   e.style.border = `1px solid ${tiles[0].border}`;
         }
+        nextElement.appendChild(e);
       }
     }
-
   }
 }
 
@@ -278,6 +286,8 @@ function moveDown() {
   if (canMove("down")) {
     removeTile();
     placeTile(currentTile.top + 1, currentTile.left);
+  } else {
+    hitBottom = true;
   }
 }
 function moveLeft() {
@@ -308,8 +318,10 @@ function drawGame() {
       let e = blocks[x];
       e.innerHTML = game[row][col]; // TODO: REMOVE !!!
       if (game[row][col]) {
-        e.style.backgroundColor = currentTile.color;
-        e.style.border = `1px solid ${currentTile.border}`;
+        // e.style.backgroundColor = currentTile.color;
+        // e.style.border = `1px solid ${currentTile.border}`;
+        e.style.backgroundColor = tiles[game[row][col]].color;
+        e.style.border = `1px solid ${tiles[game[row][col]].border}`;
       } else {
         e.style.backgroundColor = tiles[0].color;
         e.style.border = `1px solid ${tiles[0].border}`;
@@ -322,29 +334,6 @@ function drawGame() {
 }
 
 
-
-initGame();
-// currentTile = getRandomTile();
-// nextTile = getRandomTile();
-currentTile = tiles[1];
-nextTile = tiles[2];
-placeTile(0, Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2));
-drawGame();
-drawNextTile();
-
-// setInterval(() => {
-//   moveDown();
-//   grawGame();
-// }, INITIAL_SPEED)
-
-//console.log('game1', game);
-// sleep(INITIAL_SPEED);
-// moveDown();
-// grawGame();
-// sleep(INITIAL_SPEED);
-// moveDown();
-// grawGame();
-// console.log('game2', game);
 
 
 
@@ -381,21 +370,22 @@ function handleKey(event) {
     case 'ArrowDown': // rotate CW
       console.log(`move down to Y=${currentTile.top} x=${currentTile.left}`);
       moveDown();
-      drawGame();
       break;
     case 'ArrowUp': // rotate CCW
       break;
     case 'ArrowLeft':
       console.log(`move left to Y=${currentTile.top} x=${currentTile.left}`);
       moveLeft();
-      drawGame();
       break;
     case 'ArrowRight':
       console.log(`move left to Y=${currentTile.top} x=${currentTile.left}`);
       moveRight();
-      drawGame();
       break;
     case 'Space':
+      while (!hitBottom) {
+        moveDown();
+        drawGame();
+      }
       break;
     case 'Escape':
       inGame = false;
@@ -403,7 +393,55 @@ function handleKey(event) {
       drawGame();
       break;
   }
+  console.log('hit bottom:', hitBottom, 'inGame:', inGame);
+  if (hitBottom && inGame) {
+    hitBottom = false;
+    currentTile = { ...nextTile };
+    if (canPlace()) {
+      placeTile();
+    } else {
+      // конец игры
+      console.log('GAME OVER');
+      inGame = false;
+      return;
+    }
+    nextTile = getRandomTile();
+    drawNextTile();
+  }
+  drawGame();
 }
 
 button.addEventListener('click', handleClick);
 document.addEventListener('keydown', handleKey);
+
+/// ---------------- TESTING -----------------
+
+initGame();
+// currentTile = getRandomTile();
+// nextTile = getRandomTile();
+// начальные блоки
+currentTile = { ...tiles[1] };
+nextTile = tiles[3];
+placeTile(19, 0);
+currentTile = { ...tiles[2] };
+placeTile(17, 2);
+
+currentTile = tiles[3];
+placeTile();
+drawGame();
+drawNextTile();
+inGame = true;
+
+// setInterval(() => {
+//   moveDown();
+//   grawGame();
+// }, INITIAL_SPEED)
+
+//console.log('game1', game);
+// sleep(INITIAL_SPEED);
+// moveDown();
+// grawGame();
+// sleep(INITIAL_SPEED);
+// moveDown();
+// grawGame();
+// console.log('game2', game);
