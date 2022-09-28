@@ -1,19 +1,26 @@
+/* 
+TODO:
+- Ошибка в drop()! Внизу перемешиваются фигуры.
+- избавиться от inGame. Бесполезно.
+*/
+
 const cupRect = document.querySelector('.cup_wall_left');
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.getElementById("score");
 const nextElement = document.querySelector('.next-shape');
+//const button = document.querySelector('.start-button__btn');
 // ниже все размеры берутся из CSS. Главное чтобы ТАМ было правильно
 const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
 const HEIGHT = gameRect.getBoundingClientRect().height / TILE_SIZE // внутренняя высота стакана в блоках
-const button = document.querySelector('.start-button__btn');
+
 // выровнять стакан по центру
 const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
 const INITIAL_SPEED = 800; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
-const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
-
+const SPEED_DECREMENT = 10; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
+let speed;
 let intervalId = null;
 let inGame = false; // признак что мы в игре
 let game = null; // игровое поле. true - там есть блок, false - нет. Иницифлизируется в initGame()
@@ -145,7 +152,6 @@ function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].le
       }
     }
   }
-  console.log(`can place ${currentTile.id} => true`);
   return true;
 }
 
@@ -274,7 +280,7 @@ function rotate(count = 1) {
     currentTile.shape = rotateArray(currentTile.shape);
   }
   if (!canPlace()) {
-    console.log('cannot rotate!');
+    // console.log('cannot rotate!');
     currentTile = oldTile;
   }
   placeTile(currentTile.top, currentTile.left);
@@ -286,9 +292,14 @@ function moveDown() {
   if (canMove("down")) {
     removeTile();
     placeTile(currentTile.top + 1, currentTile.left);
+
   } else {
     hitBottom = true;
   }
+  // симулировать keyboardEvent чтобы сработала кнопка
+  //window.dispatchEvent(new KeyboardEvent('keydown', { 'key': '`' }));
+  checkBottom();
+  drawGame();
 }
 function moveLeft() {
   if (canMove('left')) {
@@ -301,6 +312,30 @@ function moveRight() {
     removeTile();
     placeTile(currentTile.top, currentTile.left + 1);
   }
+}
+function drop() {
+  // переместить фигуру вниз до тех пор, пока не упрется вниз
+  let canDrop = true;
+  const tileHeight = currentTile.shape.length;
+  const below = currentTile.top + tileHeight; // ряд под фигурой
+  if (below >= HEIGHT - 1) {
+    return false;
+  }
+  let row = below;
+  for (; row < HEIGHT - 1; row++) {
+    for (let col = currentTile.left; col < currentTile.left + currentTile.shape[0].length; col++) {
+      if (game[row][col]) {
+        // canDrop = false;
+        break;
+      }
+    }
+    if (!canDrop) break;
+  }
+  removeTile();
+  console.log(`drop: row=${row} tile top=${currentTile.top}`);
+  placeTile(row - tileHeight + 1, currentTile.left);
+  drawGame();
+
 }
 
 
@@ -326,6 +361,43 @@ function drawGame() {
     }
   }
   blocks = null;
+  // if (hitBottom && inGame) {
+  //   hitBottom = false;
+  //   checkAndRemoveRows();
+  //   currentTile = { ...nextTile };
+  //   if (canPlace()) {
+  //     placeTile();
+  //   } else {
+  //     // конец игры
+  //     console.log('GAME OVER');
+  //     clearInterval(intervalId);
+  //     intervalId = null;
+  //     inGame = false;
+  //     return;
+  //   }
+  //   nextTile = getRandomTile();
+  //   showNextTile();
+  // }
+}
+
+function checkBottom() {
+  if (hitBottom && inGame) {
+    hitBottom = false;
+    checkAndRemoveRows();
+    currentTile = { ...nextTile };
+    if (canPlace()) {
+      placeTile();
+    } else {
+      // конец игры
+      console.log('GAME OVER');
+      clearInterval(intervalId);
+      intervalId = null;
+      inGame = false;
+      return; // и ждем Esc
+    }
+    nextTile = getRandomTile();
+    showNextTile();
+  }
 }
 
 // удалить ряд из game[], у которого все ячейки заполнены
@@ -335,7 +407,7 @@ function checkAndRemoveRows() {
     found = false;
     for (let row = HEIGHT - 1; row >= 0; row--) {
       if (game[row].every(cell => cell !== 0)) {
-        console.log('remove row', row);
+        // console.log('remove row', row);
         // сдвигаем содержимое выше row вниз на 1 ряд
         for (let y = row; y > 0; y--) {
           for (let x = 0; x < WIDTH; x++) {
@@ -348,15 +420,31 @@ function checkAndRemoveRows() {
         }
         found = true;
         setScore(score + 10);
+        speed -= SPEED_DECREMENT;
         break;
       }
     }
   } while (found);
 }
 
+function resetSpeed(newSpeed) {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+  if (newSpeed > 0) {
+    intervalId = setInterval(moveDown, newSpeed);
+  }
+}
 
-
-
+function newGame() {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+  initGame(true);
+  inGame = true;
+  speed = INITIAL_SPEED;
+  resetSpeed(speed);
+}
 
 /* 
   --- Игоровой процесс: ----
@@ -377,88 +465,84 @@ function checkAndRemoveRows() {
       
  */
 
-function handleClick() {
-  inGame = !inGame;
-  if (!inGame) {
-    initGame(true);
-  }
-  button.innerHTML = inGame ? "STOP" : "START";
-}
+// function handleClick() {
+//   inGame = !inGame;
+//   if (!inGame) {
+//     initGame(true);
+//   }
+//   button.innerHTML = inGame ? "STOP" : "START";
+// }
 
 function handleKey(event) {
-  // console.log(event);
   switch (event.code) {
     case 'ArrowDown': // rotate CW
-      console.log(`move down to Y=${currentTile.top} x=${currentTile.left}`);
-      moveDown();
-      break;
+    // console.log(`move down to Y=${currentTile.top} x=${currentTile.left}`);
+    // moveDown();
+    // break;
     case 'Numpad2':
       rotate(1);
       break;
     case 'ArrowUp': // rotate CCW
     case 'Numpad8':
-      console.log(`rotate left`);
       rotate(3);
       break;
     case 'ArrowLeft':
     case 'Numpad4':
-      console.log(`move left to Y=${currentTile.top} x=${currentTile.left}`);
       moveLeft();
       break;
     case 'ArrowRight':
     case 'Numpad6':
-      console.log(`move left to Y=${currentTile.top} x=${currentTile.left}`);
       moveRight();
       break;
     case 'Space':
-      while (!hitBottom) {
-        moveDown();
-        drawGame();
-      }
+      // while (!hitBottom) {
+      //   moveDown();
+      // }
+      drop();
       break;
     case 'Escape':
-      initGame(true);
+      newGame();
       break;
     default:
       console.log(event.code);
   }
-  console.log('currentTile:', currentTile);
   drawGame();
-  console.log('hit bottom:', hitBottom, 'inGame:', inGame);
-  if (hitBottom && inGame) {
-    hitBottom = false;
-    checkAndRemoveRows();
-    currentTile = { ...nextTile };
-    if (canPlace()) {
-      placeTile();
-    } else {
-      // конец игры
-      console.log('GAME OVER');
-      inGame = false;
-      return;
-    }
-    nextTile = getRandomTile();
-    showNextTile();
-  }
-  drawGame();
+  // if (hitBottom && inGame) {
+  //   hitBottom = false;
+  //   checkAndRemoveRows();
+  //   currentTile = { ...nextTile };
+  //   if (canPlace()) {
+  //     placeTile();
+  //   } else {
+  //     // конец игры
+  //     console.log('GAME OVER');
+  //     inGame = false;
+  //     return;
+  //   }
+  //   nextTile = getRandomTile();
+  //   showNextTile();
+  // }
+  // drawGame();
 }
 
-button.addEventListener('click', handleClick);
+// button.addEventListener('click', handleClick);
 document.addEventListener('keydown', handleKey);
 
+newGame();
 /// ---------------- TESTING -----------------
 
-initGame(false);
-// начальные блоки
-currentTile = { ...tiles[1] };
-nextTile = tiles[3];
-placeTile(19, 0);
-currentTile = { ...tiles[2] };
-placeTile(17, 2);
 
-currentTile = tiles[3];
-placeTile();
-drawGame();
-showNextTile();
-inGame = true;
+
+// // начальные блоки
+// currentTile = { ...tiles[1] };
+// nextTile = tiles[3];
+// placeTile(19, 0);
+// currentTile = { ...tiles[2] };
+// placeTile(17, 2);
+
+// currentTile = tiles[3];
+// placeTile();
+// drawGame();
+// showNextTile();
+// inGame = true;
 
