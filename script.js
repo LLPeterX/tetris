@@ -1,5 +1,6 @@
 const gameRect = document.querySelector('.game_field');
-const scoreElement = document.getElementById("score");
+// const scoreElement = document.getElementById("score");
+const scoreElement = document.querySelector(".score");
 const nextElement = document.querySelector('.next-shape');
 const nextTileElement = document.querySelector('.next-tile');
 const gameOverElement = document.querySelector('.gameover');

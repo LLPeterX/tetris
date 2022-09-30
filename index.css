@@ -1,3 +1,7 @@
+@font-face {
+  font-family: Digital;
+  src: url("./digital-7.ttf");
+}
 * {
   margin: 0;
   padding: 0;
@@ -69,12 +73,13 @@ body {
 .score {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 20px;
   width: 200px;
   height: 100px;
   background-color: black;
   color: white;
-  font-size: 20px;
+  font-family: Digital, sans-serif;
+  font-size: 44px;
   font-weight: bold;
 }
 
