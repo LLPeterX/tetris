@@ -1,15 +1,12 @@
 /* 
 TODO:
-- где-то ошибка в drop() или rotate()+drop(): Внизу перемешиваются фигуры.
-- если быстро давить на пробел, то полная жопа. всё сливается внизу.
-- избавиться от inGame. Бесполезно.
+- игра не завершается!
 */
 
 const cupRect = document.querySelector('.cup_wall_left');
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.getElementById("score");
 const nextElement = document.querySelector('.next-shape');
-//const button = document.querySelector('.start-button__btn');
 // ниже все размеры берутся из CSS. Главное чтобы ТАМ было правильно
 const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
@@ -111,11 +108,6 @@ const tiles = [
 function initGame(withStartTile = false) {
   game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill().map(x => 0));
   gameRect.innerHTML = null;
-  // удалить блоки внтури стакана
-  // if (blocks) {
-  //   blocks.forEach(e => e.remove());
-  // }
-  // let blocks = gameRect.children;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
       let cell = document.createElement('div');
@@ -172,63 +164,7 @@ function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].le
   return true;
 }
 
-// Определить, можно ли переместить текщую фигуру с текущими координатами [top,left]
-// в заданном направлении (left, right, down, cw, ccw)
-/*
-function canMove(direction) {
-  const shapeWidth = currentTile.shape[0].length;
-  const shapeHeight = currentTile.shape.length;
-  switch (direction) {
-    case 'down':
-      // проверяем касание нижнего края фигуры дна стакана или существущей фигуры (gamy[bottom+1][x]===1)
-      if (currentTile.top + shapeHeight >= HEIGHT) {
-        return false;
-      }
-      for (let x = 0; x < shapeWidth; x++) {
-        if (currentTile.shape[shapeHeight - 1][x]) {
-          if (game[currentTile.top + shapeHeight][currentTile.left + x]) {
-            return false;
-          }
-        }
-      }
-      break;
-    case 'left':
-      // проверяем касание левого края фигуры бока стакана или существущей фигуры (gamy[y][left-1]===1)
-      if (currentTile.left <= 0) {
-        return false;
-      }
-      for (let y = 0; y < shapeHeight; y++) {
-        if (currentTile.shape[y][0]) {
-          if (game[y + currentTile.top][currentTile.left - 1]) {
-            return false;
-          }
-        }
-      }
-      break;
-    case 'right':
-      // проверяем касание правого края фигуры бока стакана или существущей фигуры (gamy[y][right+1]===1)
-      if (currentTile.left + shapeWidth > WIDTH - 1) {
-        return false;
-      }
-      for (let y = 0; y < shapeHeight; y++) { // по правому боку
-        if (currentTile.shape[y][currentTile.left + shapeWidth - 1]) {
-          if (game[y + currentTile.top][currentTile.left + shapeWidth]) {
-            return false;
-          }
-        }
-      }
-      break;
-    case 'cw':
-    // поворачиваем матрицу и проверяем, не пересекаются ли фигуры
 
-
-
-
-  }
-  return true;
-
-}
-*/
 // удалить фигуру (в game[] нарисовать на ее месте 0 )
 // пол умолчанию - текущую фигуру (currentTile)
 function removeTile(tile = currentTile) {
