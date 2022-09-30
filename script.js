@@ -7,7 +7,7 @@ const BLOCK_SIZE = 20; // размер одного блока в пикселя
 const WIDTH = 10 // внутренняя ширина стакана в блоках
 const HEIGHT = 20 // внутренняя высота стакана в блоках
 const INITIAL_SPEED = 700; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
-const SPEED_DECREMENT = 15; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
+const SPEED_DECREMENT = 10; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 
 let speed = INITIAL_SPEED;
 let intervalId = null;
@@ -453,7 +453,7 @@ function drawTitle() {
 }
 
 document.addEventListener('keydown', handleKey);
-drawTitle();
+// drawTitle();
 // запускаем новую игру
 newGame();
 /// ---------------- TESTING -----------------
