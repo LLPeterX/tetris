@@ -5,9 +5,10 @@
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: relative;
+  text-align: center;
+  /* flex-direction: column;
+  justify-content: center; */
   font-family: "Courier New", Courier, monospace;
 }
 
