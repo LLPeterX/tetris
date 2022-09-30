@@ -21,12 +21,14 @@ cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
 const INITIAL_SPEED = 700; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
 const SPEED_DECREMENT = 20; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
-let speed;
+
+let speed = INITIAL_SPEED;
 let intervalId = null;
 let tick = 0;
 let logging = true;
 let inGame = false; // признак что мы в игре
 let game = null; // игровое поле. true - там есть блок, false - нет. Иницифлизируется в initGame()
+// let blocks = null; // коллекция gameRect.children. Инициализируется в initGame();
 let currentTile = null; // текущая падающая фигура
 let nextTile = null; // следующая фигура
 let score = 0; // текущий счет
@@ -109,6 +111,11 @@ const tiles = [
 function initGame(withStartTile = false) {
   game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill().map(x => 0));
   gameRect.innerHTML = null;
+  // удалить блоки внтури стакана
+  // if (blocks) {
+  //   blocks.forEach(e => e.remove());
+  // }
+  // let blocks = gameRect.children;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
       let cell = document.createElement('div');
@@ -140,26 +147,34 @@ function getRandomTile() {
 
 // проверка - можно ли разместить текущую фигуру по указанным координатам
 function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2)) {
-  if (top < 0 || top >= HEIGHT || left < 0 || left + currentTile.shape[0].length >= WIDTH) {
+  const tileWidth = currentTile.shape[0].length;
+  const tileHeight = currentTile.shape.length;
+
+  // границы стакана
+  if (top < 0 || top + tileHeight > HEIGHT || left < 0 || left + tileWidth > WIDTH) {
     return false;
   }
-  // есть ли пересечения с другими фигурами?
-  for (let i = 0; i < currentTile.shape.length; i++) {
-    for (let j = 0; j < currentTile.shape[0].length; j++) {
+  removeTile(); // убираем фигуру, чтобы избежать своих же клеток.
+  // есть ли пересечения с другими имеющимися фигурами?
+  for (let i = 0; i < tileHeight; i++) {
+    for (let j = 0; j < tileWidth; j++) {
       if (currentTile.shape[i][j]) {
         let row = i + top;
         let col = j + left;
         if (game[row][col]) {
+          placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
           return false;
         }
       }
     }
   }
+  placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
   return true;
 }
 
 // Определить, можно ли переместить текщую фигуру с текущими координатами [top,left]
 // в заданном направлении (left, right, down, cw, ccw)
+/*
 function canMove(direction) {
   const shapeWidth = currentTile.shape[0].length;
   const shapeHeight = currentTile.shape.length;
@@ -213,16 +228,14 @@ function canMove(direction) {
   return true;
 
 }
-
+*/
 // удалить фигуру (в game[] нарисовать на ее месте 0 )
 // пол умолчанию - текущую фигуру (currentTile)
 function removeTile(tile = currentTile) {
   for (let i = 0; i < tile.shape.length; i++) {
     for (let j = 0; j < tile.shape[0].length; j++) {
       if (tile.shape[i][j]) {
-        let row = i + tile.top;
-        let col = j + tile.left;
-        game[row][col] = 0;
+        game[i + tile.top][j + tile.left] = 0;
       }
     }
   }
@@ -275,14 +288,13 @@ const rotateArray = (array) => array[0].map((_, j) => array.map(row => row[j]).r
 // повернуть фигуру по часовой столке
 // для поворота против - поворачиваем 3 раза
 function rotate(count = 1) {
-  //debugger;
   if (currentTile.top === 0) return false;
   let oldTile = copyObject(currentTile);
   removeTile();
   for (let i = 0; i < count; i++) {
     currentTile.shape = rotateArray(currentTile.shape);
   }
-  if (!canPlace()) {
+  if (!canPlace(currentTile.top, currentTile.left)) {
     // console.log('cannot rotate!');
     currentTile = oldTile;
   }
@@ -293,7 +305,8 @@ function rotate(count = 1) {
 
 // сместить фигуру вниз
 function moveDown() {
-  if (canMove("down")) {
+  //if (canMove("down")) {
+  if (canPlace(currentTile.top + 1, currentTile.left)) {
     removeTile();
     placeTile(currentTile.top + 1, currentTile.left);
     log("down");
@@ -301,45 +314,32 @@ function moveDown() {
     log("hit bottom");
     hitBottom = true;
   }
-  // симулировать keyboardEvent чтобы сработала кнопка
-  //window.dispatchEvent(new KeyboardEvent('keydown', { 'key': '`' }));
   checkBottom();
   drawGame();
   tick++;
 }
 function moveLeft() {
-  if (canMove('left')) {
+  //if (canMove('left')) {
+  if (canPlace(currentTile.top, currentTile.left - 1)) {
     removeTile();
     placeTile(currentTile.top, currentTile.left - 1);
     log('left');
   }
 }
 function moveRight() {
-  if (canMove('right')) {
+  //if (canMove('right')) {
+  //debugger;
+  if (canPlace(currentTile.top, currentTile.left + 1)) {
     removeTile();
     placeTile(currentTile.top, currentTile.left + 1);
     log('right');
   }
 }
 function drop() {
-  // переместить фигуру вниз до тех пор, пока не упрется вниз
-  const tileHeight = currentTile.shape.length;
-  const tileWidth = currentTile.shape[0].length;
-  let row = currentTile.top + tileHeight; // нижняя граница фигуры
-  let hit = 0;
-  debugger;
-  for (; row < HEIGHT && !hit; row++) {
-    for (let col = currentTile.left; col < currentTile.left + tileWidth; col++) {
-      if (row < HEIGHT - 1 && game[row + 1][col]) {
-        hit = 1;
-        break;
-      }
-
-    }
+  while (canPlace(currentTile.top + 1, currentTile.left)) {
+    removeTile();
+    placeTile(currentTile.top + 1, currentTile.left);
   }
-  removeTile();
-  placeTile(row - tileHeight, currentTile.left);
-  drawGame();
   log('drop');
 }
 
@@ -353,8 +353,7 @@ function drawGame() {
   let blocks = gameRect.children;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
-      let x = row * WIDTH + col;
-      let e = blocks[x];
+      let e = blocks[row * WIDTH + col];
       e.innerHTML = game[row][col]; // внутренний текст для отладкиTODO: REMOVE !!!
       if (game[row][col]) {
         e.style.backgroundColor = tiles[game[row][col]].color;
@@ -365,24 +364,7 @@ function drawGame() {
       }
     }
   }
-  blocks = null;
-  // if (hitBottom && inGame) {
-  //   hitBottom = false;
-  //   checkAndRemoveRows();
-  //   currentTile = { ...nextTile };
-  //   if (canPlace()) {
-  //     placeTile();
-  //   } else {
-  //     // конец игры
-  //     console.log('GAME OVER');
-  //     clearInterval(intervalId);
-  //     intervalId = null;
-  //     inGame = false;
-  //     return;
-  //   }
-  //   nextTile = getRandomTile();
-  //   showNextTile();
-  // }
+  blocks = null; // for GC
 }
 
 function checkBottom() {
@@ -390,7 +372,7 @@ function checkBottom() {
     hitBottom = false;
     checkAndRemoveRows();
     currentTile = { ...nextTile };
-    if (canPlace()) {
+    if (canPlace()) { // at top/center new tile
       placeTile();
     } else {
       // конец игры
@@ -399,6 +381,8 @@ function checkBottom() {
       tick = 0;
       intervalId = null;
       inGame = false;
+      nextTile = tiles[0];
+      showNextTile();
       return; // и ждем Esc
     }
     nextTile = getRandomTile();
@@ -432,6 +416,7 @@ function checkAndRemoveRows() {
       }
     }
   } while (found);
+  resetSpeed(speed);
 }
 
 function resetSpeed(newSpeed) {
@@ -474,20 +459,10 @@ function newGame() {
       
  */
 
-// function handleClick() {
-//   inGame = !inGame;
-//   if (!inGame) {
-//     initGame(true);
-//   }
-//   button.innerHTML = inGame ? "STOP" : "START";
-// }
 
 function handleKey(event) {
   switch (event.code) {
     case 'ArrowDown': // rotate CW
-    // console.log(`move down to Y=${currentTile.top} x=${currentTile.left}`);
-    // moveDown();
-    // break;
     case 'Numpad2':
       rotate(1);
       break;
@@ -515,26 +490,11 @@ function handleKey(event) {
     default:
       console.log(event.code);
   }
+  resetSpeed(speed);
   drawGame();
-  // if (hitBottom && inGame) {
-  //   hitBottom = false;
-  //   checkAndRemoveRows();
-  //   currentTile = { ...nextTile };
-  //   if (canPlace()) {
-  //     placeTile();
-  //   } else {
-  //     // конец игры
-  //     console.log('GAME OVER');
-  //     inGame = false;
-  //     return;
-  //   }
-  //   nextTile = getRandomTile();
-  //   showNextTile();
-  // }
-  // drawGame();
+
 }
 
-// button.addEventListener('click', handleClick);
 document.addEventListener('keydown', handleKey);
 newGame();
 /// ---------------- TESTING -----------------

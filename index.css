@@ -84,11 +84,13 @@ body {
   /* width: calc(var(--size) * var(--width) + var(--size) * 2); */
 }
 .start-button__btn {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
-  padding: 10px 30px 10px 30px;
+  /* padding: 10px 30px 10px 30px; */
+  padding: 5px 10px 5px 10px;
   background-color: bisque;
-  width: calc(var(--size) * var(--width) + var(--size) * 2);
+  /* width: calc(var(--size) * var(--width) + var(--size) * 2); */
+  width: 100%;
 }
 
 .next-tile {
