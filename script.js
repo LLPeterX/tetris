@@ -3,19 +3,18 @@ TODO:
 - игра не завершается!
 */
 
-const cupRect = document.querySelector('.cup_wall_left');
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.getElementById("score");
 const nextElement = document.querySelector('.next-shape');
 // ниже все размеры берутся из CSS. Главное чтобы ТАМ было правильно
-const TILE_SIZE = cupRect.getBoundingClientRect().width; // размер одного блока в пикселях (см. --size в style.css)
-const WIDTH = gameRect.getBoundingClientRect().width / TILE_SIZE // внутренняя ширина стакана в блоках
-const HEIGHT = gameRect.getBoundingClientRect().height / TILE_SIZE // внутренняя высота стакана в блоках
+const BLOCK_SIZE = 20; // размер одного блока в пикселях (см. --size в style.css)
+const WIDTH = 10 // внутренняя ширина стакана в блоках
+const HEIGHT = 20 // внутренняя высота стакана в блоках
 
 // выровнять стакан по центру
-const cup = document.querySelector('.cup');
-cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
-cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
+// const cup = document.querySelector('.cup');
+// cup.style.width = `${(WIDTH + 2) * BLOCK_SIZE}px`;
+// cup.style.height = `${(HEIGHT + 1) * BLOCK_SIZE}px`;
 const INITIAL_SPEED = 700; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
 const SPEED_DECREMENT = 20; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 
@@ -112,8 +111,8 @@ function initGame(withStartTile = false) {
     for (let col = 0; col < WIDTH; col++) {
       let cell = document.createElement('div');
       cell.classList.add('block');
-      cell.style.left = `${col * TILE_SIZE}px`;
-      cell.style.top = `${row * TILE_SIZE}px`;
+      cell.style.left = `${col * BLOCK_SIZE}px`;
+      cell.style.top = `${row * BLOCK_SIZE}px`;
       cell.style.backgroundColor = tiles[0].color;
       cell.style.border = `1px solid ${tiles[0].border}`;
       gameRect.appendChild(cell);
@@ -200,8 +199,8 @@ function showNextTile() {
       for (let col = 0; col < nextTile.shape[0].length; col++) {
         let e = document.createElement('div');
         e.classList.add('block');
-        e.style.left = `${TILE_SIZE * 3 + TILE_SIZE * col}px`;
-        e.style.top = `${TILE_SIZE * 2 + TILE_SIZE * row}px`;
+        e.style.left = `${BLOCK_SIZE * 3 + BLOCK_SIZE * col}px`;
+        e.style.top = `${BLOCK_SIZE * 2 + BLOCK_SIZE * row}px`;
         if (nextTile.shape[row][col]) {
           e.style.backgroundColor = nextTile.color;
           e.style.border = `1px solid ${nextTile.border}`;

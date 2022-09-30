@@ -37,6 +37,12 @@ body {
 .cup {
   position: relative;
   margin: 0 auto;
+  box-sizing: content-box;
+  border-left: 20px solid var(--wall-color);
+  border-bottom: 20px solid var(--wall-color);
+  border-right: 20px solid var(--wall-color);
+  width: 200px;
+  height: 400px;
 }
 
 .cup_wall {
@@ -62,11 +68,21 @@ body {
 }
 
 .game_field {
-  position: absolute;
+  /* position: absolute;
   top: 0;
   left: var(--size);
   width: calc(var(--size) * var(--width));
-  height: calc(var(--size) * var(--height));
+  height: calc(var(--size) * var(--height)); */
+
+  position: relative;
+  margin: 0 auto;
+  box-sizing: content-box;
+  border-left: 20px solid var(--wall-color);
+  border-bottom: 20px solid var(--wall-color);
+  border-right: 20px solid var(--wall-color);
+  width: 200px;
+  height: 400px;
+  background-color: black;
 }
 
 .block {
