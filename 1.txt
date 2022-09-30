@@ -3,38 +3,38 @@ const scoreElement = document.querySelector(".score");
 const nextElement = document.querySelector('.next-shape');
 const nextTileElement = document.querySelector('.next-tile');
 const gameOverElement = document.querySelector('.gameover');
-const BLOCK_SIZE = 20; // СЂР°Р·РјРµСЂ РѕРґРЅРѕРіРѕ Р±Р»РѕРєР° РІ РїРёРєСЃРµР»СЏС… (СЃРј. --size РІ style.css)
-const WIDTH = 10 // РІРЅСѓС‚СЂРµРЅРЅСЏСЏ С€РёСЂРёРЅР° СЃС‚Р°РєР°РЅР° РІ Р±Р»РѕРєР°С…
-const HEIGHT = 20 // РІРЅСѓС‚СЂРµРЅРЅСЏСЏ РІС‹СЃРѕС‚Р° СЃС‚Р°РєР°РЅР° РІ Р±Р»РѕРєР°С…
-const INITIAL_SPEED = 700; // РЅР°С‡Р°Р»СЊРЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ РїР°РґРµРЅРёСЏ С„РёРіСѓСЂС‹ РІ ms - Р·Р°РґРµСЂР¶РєР° РїРµСЂРµРґ РїРµСЂРµС…РѕРґРѕРј РІРЅРёР·
-const SPEED_DECREMENT = 15; // СЃ РєР°Р¶РґС‹Рј СѓРґР°Р»РµРЅРЅС‹Рј СЂСЏРґРѕРј Р·Р°РґРµСЂР¶РєР° Р±СѓРґРµС‚ СѓРјРµРЅСЊС€Р°С‚СЊСЃСЏ РЅР° СЌС‚Сѓ РІРµР»РёС‡РёРЅСѓ
+const BLOCK_SIZE = 20; // размер одного блока в пикселях (см. --size в style.css)
+const WIDTH = 10 // внутренняя ширина стакана в блоках
+const HEIGHT = 20 // внутренняя высота стакана в блоках
+const INITIAL_SPEED = 700; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
+const SPEED_DECREMENT = 15; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 
 let speed = INITIAL_SPEED;
 let intervalId = null;
 let tick = 0;
 let logging = true;
-let inGame = false; // РїСЂРёР·РЅР°Рє С‡С‚Рѕ РјС‹ РІ РёРіСЂРµ
-let game = null; // РёРіСЂРѕРІРѕРµ РїРѕР»Рµ. 
-let currentTile = null; // С‚РµРєСѓС‰Р°СЏ РїР°РґР°СЋС‰Р°СЏ С„РёРіСѓСЂР°
-let nextTile = null; // СЃР»РµРґСѓСЋС‰Р°СЏ С„РёРіСѓСЂР°
-let score = 0; // С‚РµРєСѓС‰РёР№ СЃС‡РµС‚
+let inGame = false; // признак что мы в игре
+let game = null; // игровое поле. 
+let currentTile = null; // текущая падающая фигура
+let nextTile = null; // следующая фигура
+let score = 0; // текущий счет
 let hitBottom = false;
 
-// РІ РЅР°С‡Р°Р»Рµ РїРѕС„РёРєСЃРёС‚СЊ СЂР°Р·РјРµСЂС‹:
-//1. РљРѕРЅС‚РµР№РЅРµСЂ
+// в начале пофиксить размеры:
+//1. Контейнер
 document.querySelector('.container').style.width = `${BLOCK_SIZE * WIDTH + (BLOCK_SIZE * 24)}px`;
 nextTileElement.style.height = `${BLOCK_SIZE * 7}px`;
 nextTileElement.style.width = `${BLOCK_SIZE * 10}px`;
 // document.querySelector('.score').style.height = `${BLOCK_SIZE * 6}px`;
-document.querySelector('.score').style.height = nextTileElement.style.height; // С‡С‚РѕР±С‹ Р±С‹Р»Р° РѕРґРёРЅР°РєРѕРІР°СЏ РІС‹СЃРѕС‚Р° - РґР»СЏ РєСЂР°СЃРѕС‚С‹
-// РѕРєРЅРѕ "game over"
+document.querySelector('.score').style.height = nextTileElement.style.height; // чтобы была одинаковая высота - для красоты
+// окно "game over"
 const go = gameOverElement.getBoundingClientRect(),
   gr = gameRect.getBoundingClientRect();
 gameOverElement.style.top = `${Math.floor(gr.top + gr.height / 2 - go.height / 2)}px`;
 gameOverElement.style.left = `${Math.floor(gr.left + gr.width / 2 - go.width / 2)}px`;
 
 
-// РњР°СЃСЃРёРІ С„РёРіСѓСЂ. РџРµСЂРІС‹Р№ СЌР»РµРјРµРЅС‚ РјР°СЃСЃРёРІР° - СЏС‡РµР№РєР° С„РѕРЅР°
+// Массив фигур. Первый элемент массива - ячейка фона
 const tiles = [
   {
     shape: [
@@ -105,7 +105,7 @@ const tiles = [
 
 ];
 
-// РѕС‡РёСЃС‚РёС‚СЊ РёРіСЂРѕРІРѕРµ РїРѕР»Рµ (РІРЅСѓС‚СЂРµРЅРЅРѕСЃС‚Рё СЃС‚Р°РєР°РЅР°). 
+// очистить игровое поле (внутренности стакана). 
 function initGame(withStartTile = false) {
   game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill().map(x => 0));
   gameRect.innerHTML = null;
@@ -140,36 +140,36 @@ function getRandomTile() {
   return tile;
 }
 
-// РїСЂРѕРІРµСЂРєР° - РјРѕР¶РЅРѕ Р»Рё СЂР°Р·РјРµСЃС‚РёС‚СЊ С‚РµРєСѓС‰СѓСЋ С„РёРіСѓСЂСѓ РїРѕ СѓРєР°Р·Р°РЅРЅС‹Рј РєРѕРѕСЂРґРёРЅР°С‚Р°Рј
+// проверка - можно ли разместить текущую фигуру по указанным координатам
 function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2)) {
   const tileWidth = currentTile.shape[0].length;
   const tileHeight = currentTile.shape.length;
 
-  // РіСЂР°РЅРёС†С‹ СЃС‚Р°РєР°РЅР°
+  // границы стакана
   if (top < 0 || top + tileHeight > HEIGHT || left < 0 || left + tileWidth > WIDTH) {
     return false;
   }
-  top > 0 && removeTile(); // РµСЃРґРё С„РёРіСѓСЂР° СѓР¶Рµ РµСЃС‚СЊ, СѓР±РёСЂР°РµРј РµС‘, С‡С‚РѕР±С‹ РёР·Р±РµР¶Р°С‚СЊ СЃРІРѕРёС… Р¶Рµ РєР»РµС‚РѕРє.
-  // РµСЃС‚СЊ Р»Рё РїРµСЂРµСЃРµС‡РµРЅРёСЏ СЃ РґСЂСѓРіРёРјРё РёРјРµСЋС‰РёРјРёСЃСЏ С„РёРіСѓСЂР°РјРё?
+  top > 0 && removeTile(); // есди фигура уже есть, убираем её, чтобы избежать своих же клеток.
+  // есть ли пересечения с другими имеющимися фигурами?
   for (let i = 0; i < tileHeight; i++) {
     for (let j = 0; j < tileWidth; j++) {
       if (currentTile.shape[i][j]) {
         let row = i + top;
         let col = j + left;
         if (game[row][col]) {
-          top > 0 && placeTile(currentTile.top, currentTile.left); // РІРѕР·РІСЂР°С‰Р°РµРј С„РёРіСѓСЂСѓ РЅР°Р·Р°Рґ РіРґРµ Р±С‹Р»Р°
+          top > 0 && placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
           return false;
         }
       }
     }
   }
-  top > 0 && placeTile(currentTile.top, currentTile.left); // РІРѕР·РІСЂР°С‰Р°РµРј С„РёРіСѓСЂСѓ РЅР°Р·Р°Рґ РіРґРµ Р±С‹Р»Р°
+  top > 0 && placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
   return true;
 }
 
 
-// СѓРґР°Р»РёС‚СЊ С„РёРіСѓСЂСѓ (РІ game[] РЅР°СЂРёСЃРѕРІР°С‚СЊ РЅР° РµРµ РјРµСЃС‚Рµ 0 )
-// РїРѕР» СѓРјРѕР»С‡Р°РЅРёСЋ - С‚РµРєСѓС‰СѓСЋ С„РёРіСѓСЂСѓ (currentTile)
+// удалить фигуру (в game[] нарисовать на ее месте 0 )
+// пол умолчанию - текущую фигуру (currentTile)
 function removeTile(tile = currentTile) {
   for (let i = 0; i < tile.shape.length; i++) {
     for (let j = 0; j < tile.shape[0].length; j++) {
@@ -180,7 +180,7 @@ function removeTile(tile = currentTile) {
   }
 }
 
-// СЂР°Р·РјРµСЃС‚РёС‚СЊ С„РёРіСѓСЂСѓ. Р•СЃР»Рё РєРѕРѕСЂРґРёРЅР°С‚С‹ РЅРµ СѓРєР°Р·Р°РЅС‹, С‚Рѕ РІРІРµСЂС…Сѓ РїРѕ С†РµРЅС‚СЂСѓ
+// разместить фигуру. Если координаты не указаны, то вверху по центру
 function placeTile(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].length / 2)) {
   currentTile.top = top;
   currentTile.left = left;
@@ -195,7 +195,7 @@ function placeTile(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].l
   }
 }
 
-// РїРѕРєР°Р·Р°С‚СЊ СЃР»РµРґСѓСЋС‰СѓСЋ С„РёРіСѓСЂСѓ
+// показать следующую фигуру
 function showNextTile() {
   if (nextTile) {
     let bound = nextTileElement.getBoundingClientRect();
@@ -208,7 +208,7 @@ function showNextTile() {
       for (let col = 0; col < tileWidth; col++) {
         let e = document.createElement('div');
         e.classList.add('block');
-        // СЂР°СЃРїРѕР»РѕР¶РёС‚СЊ РїРѕ С†РµРЅС‚СЂСѓ
+        // расположить по центру
         e.style.left = `${offset + col * BLOCK_SIZE}px`;
         e.style.top = `${BLOCK_SIZE * 3 + row * BLOCK_SIZE}px`;
         e.style.width = `${BLOCK_SIZE}px`;
@@ -229,10 +229,10 @@ function showNextTile() {
 
 const copyObject = (obj) => JSON.parse(JSON.stringify(obj));
 
-// РІСЂР°С‰РµРЅРёРµ РјР°СЃСЃРёРІР° РїРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРµ РЅР° 90
+// вращение массива по часовой стрелке на 90
 const rotateArray = (array) => array[0].map((_, j) => array.map(row => row[j]).reverse());
-// РїРѕРІРµСЂРЅСѓС‚СЊ С„РёРіСѓСЂСѓ РїРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚РѕР»РєРµ
-// РґР»СЏ РїРѕРІРѕСЂРѕС‚Р° РїСЂРѕС‚РёРІ - РїРѕРІРѕСЂР°С‡РёРІР°РµРј 3 СЂР°Р·Р°
+// повернуть фигуру по часовой столке
+// для поворота против - поворачиваем 3 раза
 function rotate(count = 1) {
   if (currentTile.top === 0) return false;
   let oldTile = copyObject(currentTile);
@@ -248,7 +248,7 @@ function rotate(count = 1) {
   log(`rotate ${count}`);
 }
 
-// СЃРјРµСЃС‚РёС‚СЊ С„РёРіСѓСЂСѓ РІРЅРёР·
+// сместить фигуру вниз
 function moveDown() {
   if (!inGame) return;
   if (canPlace(currentTile.top + 1, currentTile.left)) {
@@ -291,13 +291,13 @@ function setScore(s) {
   scoreElement.innerHTML = s;
 }
 
-// РЅР°СЂРёСЃРѕРІР°С‚СЊ Р±Р»РѕРєРё РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ Р·РЅР°С‡РµРЅРёР№ game[]
+// нарисовать блоки в зависимости от значений game[]
 function drawGame() {
   let blocks = gameRect.children;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
       let e = blocks[row * WIDTH + col];
-      // e.innerHTML = game[row][col]; // РІРЅСѓС‚СЂРµРЅРЅРёР№ С‚РµРєСЃС‚ РґР»СЏ РѕС‚Р»Р°РґРєРёTODO: REMOVE !!!
+      // e.innerHTML = game[row][col]; // внутренний текст для отладкиTODO: REMOVE !!!
       if (game[row][col]) {
         e.style.backgroundColor = tiles[game[row][col]].color;
         e.style.border = `1px solid ${tiles[game[row][col]].border}`;
@@ -318,21 +318,21 @@ function checkBottom() {
     if (canPlace(0)) { // at top/center new tile
       placeTile();
     } else {
-      // РєРѕРЅРµС† РёРіСЂС‹
+      // конец игры
       // console.log('GAME OVER');
       gameOverElement.style.visibility = 'visible';
       clearInterval(intervalId);
       intervalId = null;
       inGame = false;
       tick = 0;
-      return; // Рё Р¶РґРµРј Esc
+      return; // и ждем Esc
     }
     nextTile = getRandomTile();
     showNextTile();
   }
 }
 
-// СѓРґР°Р»РёС‚СЊ СЂСЏРґ РёР· game[], Сѓ РєРѕС‚РѕСЂРѕРіРѕ РІСЃРµ СЏС‡РµР№РєРё Р·Р°РїРѕР»РЅРµРЅС‹
+// удалить ряд из game[], у которого все ячейки заполнены
 function checkAndRemoveRows() {
   let found;
   do {
@@ -340,13 +340,13 @@ function checkAndRemoveRows() {
     for (let row = HEIGHT - 1; row >= 0; row--) {
       if (game[row].every(cell => cell !== 0)) {
         log(`remove row ${row}`);
-        // СЃРґРІРёРіР°РµРј СЃРѕРґРµСЂР¶РёРјРѕРµ РІС‹С€Рµ row РІРЅРёР· РЅР° 1 СЂСЏРґ
+        // сдвигаем содержимое выше row вниз на 1 ряд
         for (let y = row; y > 0; y--) {
           for (let x = 0; x < WIDTH; x++) {
             game[y][x] = game[y - 1][x];
           }
         }
-        // Р·Р°РЅСѓР»СЏРµРј РїРµСЂРІСѓСЋ СЃС‚СЂРѕРєСѓ
+        // зануляем первую строку
         for (let x = 0; x < WIDTH; x++) {
           game[0][x] = 0;
         }
@@ -360,7 +360,7 @@ function checkAndRemoveRows() {
   resetSpeed(speed);
 }
 
-// СЃР±СЂРѕСЃ СЃРєРѕСЂРѕСЃС‚Рё
+// сброс скорости
 function resetSpeed(newSpeed) {
   if (intervalId) {
     clearInterval(intervalId);
@@ -370,7 +370,7 @@ function resetSpeed(newSpeed) {
   }
 }
 
-// Р·Р°РїСѓСЃРє РЅРѕРІРѕР№ РёРіСЂС‹: РѕС‡РёСЃС‚РєР° РїРѕР»СЏ, РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ С‚Р°Р№РјРµСЂР°, СѓР±РёСЂР°РЅРёРµ РѕРєРЅР° gameover
+// запуск новой игры: очистка поля, инициализация таймера, убирание окна gameover
 function newGame() {
   if (intervalId) {
     clearInterval(intervalId);
@@ -384,15 +384,15 @@ function newGame() {
   log('new Game');
 }
 
-// РћР±СЂР°Р±РѕС‚РєР° РЅР°Р¶Р°С‚РёР№ РєР»Р°РІРёС‰
+// Обработка нажатий клавищ
 function handleKey(event) {
   if (!inGame && event.code !== 'Escape') return;
   switch (event.code) {
-    case 'ArrowDown': // РїРѕРІРѕСЂРѕС‚ CW
+    case 'ArrowDown': // поворот CW
     case 'Numpad2':
       rotate(1);
       break;
-    case 'ArrowUp': // РїРѕРІРѕСЂРѕС‚ CCW
+    case 'ArrowUp': // поворот CCW
     case 'Numpad8':
       rotate(3);
       break;
@@ -423,7 +423,7 @@ function handleKey(event) {
 
 function drawTitle() {
   const letters = [
-    // T   E   T   Р    Р  РЎ 
+    // T   E   T   Р   И  С 
     '111 222 333 444 5  5 666',
     ' 1  2    3  4 4 5 55 6  ',
     ' 1  22   3  444 55 5 6  ',
@@ -454,13 +454,13 @@ function drawTitle() {
 
 document.addEventListener('keydown', handleKey);
 drawTitle();
-// Р·Р°РїСѓСЃРєР°РµРј РЅРѕРІСѓСЋ РёРіСЂСѓ
+// запускаем новую игру
 newGame();
 /// ---------------- TESTING -----------------
 /* 
-РЅРёР¶Рµ - С„СѓРЅРєС†РёСЏ Р·Р°РїРёСЃРё РІ Р»РѕРі. 
-Рў.Рє. С‚РµСЃС‚РёСЂРѕРІР°РЅРёРµ РёРіСЂС‹ РІ РґР°Р±Р°РіРµСЂРµ Р·Р°С‚СЂСѓРґРЅРµРЅРѕ РёР·-Р·Р° РїСЂРѕР±Р»РµРј РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РјР°СЃСЃРёРІР° game[][],
-С‚Рѕ РїСЂРё РєР°Р¶РґРѕРј С‚РёРєРµ РЅР° СЃРІРµСЂРІРµСЂ РѕС‚РїСЂР°РІР»СЏРµС‚СЃСЏ С‚РµРєСѓС‰РµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РёРіСЂС‹, Р° РѕС‚РѕС‚ РµРіРѕ РїРёС€РµС‚ РІ С„Р°Р№Р».
+ниже - функция записи в лог. 
+Т.к. тестирование игры в дабагере затруднено из-за проблем отображения массива game[][],
+то при каждом тике на свервер отправляется текущее состояние игры, а отот его пишет в файл.
 
 */
 function log(text) {
