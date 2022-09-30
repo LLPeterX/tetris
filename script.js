@@ -6,15 +6,10 @@ TODO:
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.getElementById("score");
 const nextElement = document.querySelector('.next-shape');
-// ниже все размеры берутся из CSS. Главное чтобы ТАМ было правильно
+const nextTileElement = document.querySelector('.next-tile');
 const BLOCK_SIZE = 20; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = 10 // внутренняя ширина стакана в блоках
 const HEIGHT = 20 // внутренняя высота стакана в блоках
-
-// выровнять стакан по центру
-// const cup = document.querySelector('.cup');
-// cup.style.width = `${(WIDTH + 2) * BLOCK_SIZE}px`;
-// cup.style.height = `${(HEIGHT + 1) * BLOCK_SIZE}px`;
 const INITIAL_SPEED = 700; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
 const SPEED_DECREMENT = 20; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 
@@ -24,12 +19,18 @@ let tick = 0;
 let logging = true;
 let inGame = false; // признак что мы в игре
 let game = null; // игровое поле. true - там есть блок, false - нет. Иницифлизируется в initGame()
-// let blocks = null; // коллекция gameRect.children. Инициализируется в initGame();
 let currentTile = null; // текущая падающая фигура
 let nextTile = null; // следующая фигура
 let score = 0; // текущий счет
 let oldTop, oldLeft;
 let hitBottom = false;
+
+// в начале пофиксить размеры:
+//1. Контейнер
+document.querySelector('.container').style.width = `${BLOCK_SIZE * WIDTH + (BLOCK_SIZE * 24)}px`;
+nextTileElement.style.height = `${BLOCK_SIZE * 7}px`;
+nextTileElement.style.width = `${BLOCK_SIZE * 10}px`;
+document.querySelector('.score').style.height = `${BLOCK_SIZE * 6}px`;
 
 // первый элемент массива - ячейка фона
 const tiles = [
@@ -113,6 +114,8 @@ function initGame(withStartTile = false) {
       cell.classList.add('block');
       cell.style.left = `${col * BLOCK_SIZE}px`;
       cell.style.top = `${row * BLOCK_SIZE}px`;
+      cell.style.width = `${BLOCK_SIZE}px`;
+      cell.style.height = `${BLOCK_SIZE}px`;
       cell.style.backgroundColor = tiles[0].color;
       cell.style.border = `1px solid ${tiles[0].border}`;
       gameRect.appendChild(cell);
@@ -194,19 +197,27 @@ function placeTile(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].l
 // показать следующую фигуру в блоке 'next'
 function showNextTile() {
   if (nextTile) {
+    let bound = nextTileElement.getBoundingClientRect();
+    const tileWidth = nextTile.shape[0].length;
+    const tileHeight = nextTile.shape.length;
+    let offset = Math.floor(bound.width / 2 - tileWidth * BLOCK_SIZE / 2);
+
     nextElement.innerHTML = null;
-    for (let row = 0; row < nextTile.shape.length; row++) {
-      for (let col = 0; col < nextTile.shape[0].length; col++) {
+    for (let row = 0; row < tileHeight; row++) {
+      for (let col = 0; col < tileWidth; col++) {
         let e = document.createElement('div');
         e.classList.add('block');
-        e.style.left = `${BLOCK_SIZE * 3 + BLOCK_SIZE * col}px`;
-        e.style.top = `${BLOCK_SIZE * 2 + BLOCK_SIZE * row}px`;
+        // расположить по центру
+        e.style.left = `${offset + col * BLOCK_SIZE}px`;
+        e.style.top = `${BLOCK_SIZE * 3 + row * BLOCK_SIZE}px`;
+        e.style.width = `${BLOCK_SIZE}px`;
+        e.style.height = `${BLOCK_SIZE}px`;
         if (nextTile.shape[row][col]) {
           e.style.backgroundColor = nextTile.color;
           e.style.border = `1px solid ${nextTile.border}`;
         } else {
           e.style.backgroundColor = tiles[0].color;
-          e.style.border = `1px solid ${tiles[0].border}`;
+          // e.style.border = `1px solid ${tiles[0].border}`;
         }
         nextElement.appendChild(e);
       }
@@ -431,6 +442,7 @@ function handleKey(event) {
 }
 
 document.addEventListener('keydown', handleKey);
+
 newGame();
 /// ---------------- TESTING -----------------
 function log(text) {
