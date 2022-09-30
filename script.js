@@ -1,12 +1,8 @@
-/* 
-TODO:
-- игра не завершается!
-*/
-
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.getElementById("score");
 const nextElement = document.querySelector('.next-shape');
 const nextTileElement = document.querySelector('.next-tile');
+const gameOverElement = document.querySelector('.gameover');
 const BLOCK_SIZE = 20; // размер одного блока в пикселях (см. --size в style.css)
 const WIDTH = 10 // внутренняя ширина стакана в блоках
 const HEIGHT = 20 // внутренняя высота стакана в блоках
@@ -31,6 +27,12 @@ document.querySelector('.container').style.width = `${BLOCK_SIZE * WIDTH + (BLOC
 nextTileElement.style.height = `${BLOCK_SIZE * 7}px`;
 nextTileElement.style.width = `${BLOCK_SIZE * 10}px`;
 document.querySelector('.score').style.height = `${BLOCK_SIZE * 6}px`;
+// окно "game over"
+const go = gameOverElement.getBoundingClientRect(),
+  gr = gameRect.getBoundingClientRect();
+gameOverElement.style.top = `${Math.floor(gr.top + gr.height / 2 - go.height / 2)}px`;
+gameOverElement.style.left = `${Math.floor(gr.left + gr.width / 2 - go.width / 2)}px`;
+
 
 // первый элемент массива - ячейка фона
 const tiles = [
@@ -251,7 +253,7 @@ function rotate(count = 1) {
 
 // сместить фигуру вниз
 function moveDown() {
-  //if (canMove("down")) {
+  if (!inGame) return;
   if (canPlace(currentTile.top + 1, currentTile.left)) {
     removeTile();
     placeTile(currentTile.top + 1, currentTile.left);
@@ -323,12 +325,15 @@ function checkBottom() {
     } else {
       // конец игры
       console.log('GAME OVER');
+      // gameOverElement.style.display='show';
+      gameOverElement.style.visibility = 'visible';
       clearInterval(intervalId);
-      tick = 0;
       intervalId = null;
       inGame = false;
-      nextTile = tiles[0];
-      showNextTile();
+      // tick = 0;
+      // inGame = false;
+      // nextTile = tiles[0];
+      // showNextTile();
       return; // и ждем Esc
     }
     nextTile = getRandomTile();
@@ -344,7 +349,6 @@ function checkAndRemoveRows() {
     for (let row = HEIGHT - 1; row >= 0; row--) {
       if (game[row].every(cell => cell !== 0)) {
         log(`remove row ${row}`);
-        // console.log('remove row', row);
         // сдвигаем содержимое выше row вниз на 1 ряд
         for (let y = row; y > 0; y--) {
           for (let x = 0; x < WIDTH; x++) {
@@ -379,6 +383,7 @@ function newGame() {
     clearInterval(intervalId);
   }
   initGame(true);
+  gameOverElement.style.visibility = 'hidden';
   inGame = true;
   speed = INITIAL_SPEED;
   resetSpeed(speed);
@@ -407,6 +412,7 @@ function newGame() {
 
 
 function handleKey(event) {
+  if (!inGame && event.code !== 'Escape') return;
   switch (event.code) {
     case 'ArrowDown': // rotate CW
     case 'Numpad2':
@@ -433,8 +439,8 @@ function handleKey(event) {
     case 'KeyP':
       logging = false;
       break;
-    default:
-      console.log(event.code);
+    // default:
+    //   console.log(event.code);
   }
   resetSpeed(speed);
   drawGame();
@@ -466,18 +472,4 @@ function log(text) {
     }
   )
 }
-
-
-// // начальные блоки
-// currentTile = { ...tiles[1] };
-// nextTile = tiles[3];
-// placeTile(19, 0);
-// currentTile = { ...tiles[2] };
-// placeTile(17, 2);
-
-// currentTile = tiles[3];
-// placeTile();
-// drawGame();
-// showNextTile();
-// inGame = true;
 

@@ -77,3 +77,19 @@ body {
   font-size: 20px;
   font-weight: bold;
 }
+
+.gameover {
+  position: absolute;
+  text-align: center;
+  z-index: 1;
+  padding: 10px;
+  color: red;
+  text-align: center;
+  font-weight: bold;
+  font-size: 20pt;
+  border: 2px solid red;
+  border-radius: 5px;
+  background-color: white;
+  visibility: hidden;
+  /* visibility: visible; */
+}
