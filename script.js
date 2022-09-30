@@ -146,7 +146,7 @@ function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].le
   if (top < 0 || top + tileHeight > HEIGHT || left < 0 || left + tileWidth > WIDTH) {
     return false;
   }
-  removeTile(); // убираем фигуру, чтобы избежать своих же клеток.
+  top > 0 && removeTile(); // есди фигура уже есть, убираем её, чтобы избежать своих же клеток.
   // есть ли пересечения с другими имеющимися фигурами?
   for (let i = 0; i < tileHeight; i++) {
     for (let j = 0; j < tileWidth; j++) {
@@ -154,13 +154,13 @@ function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].le
         let row = i + top;
         let col = j + left;
         if (game[row][col]) {
-          placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
+          top > 0 && placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
           return false;
         }
       }
     }
   }
-  placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
+  top > 0 && placeTile(currentTile.top, currentTile.left); // возвращаем фигуру назад где была
   return true;
 }
 
@@ -263,8 +263,6 @@ function moveLeft() {
   }
 }
 function moveRight() {
-  //if (canMove('right')) {
-  //debugger;
   if (canPlace(currentTile.top, currentTile.left + 1)) {
     removeTile();
     placeTile(currentTile.top, currentTile.left + 1);
@@ -308,7 +306,9 @@ function checkBottom() {
     hitBottom = false;
     checkAndRemoveRows();
     currentTile = { ...nextTile };
-    if (canPlace()) { // at top/center new tile
+    // debugger;
+    if (canPlace(0)) { // at top/center new tile
+      console.log('hit Bottom. Check if end of game');
       placeTile();
     } else {
       // конец игры
