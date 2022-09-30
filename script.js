@@ -1,5 +1,4 @@
 const gameRect = document.querySelector('.game_field');
-// const scoreElement = document.getElementById("score");
 const scoreElement = document.querySelector(".score");
 const nextElement = document.querySelector('.next-shape');
 const nextTileElement = document.querySelector('.next-tile');
@@ -19,7 +18,6 @@ let game = null; // игровое поле. true - там есть блок, fa
 let currentTile = null; // текущая падающая фигура
 let nextTile = null; // следующая фигура
 let score = 0; // текущий счет
-let oldTop, oldLeft;
 let hitBottom = false;
 
 // в начале пофиксить размеры:
@@ -27,7 +25,8 @@ let hitBottom = false;
 document.querySelector('.container').style.width = `${BLOCK_SIZE * WIDTH + (BLOCK_SIZE * 24)}px`;
 nextTileElement.style.height = `${BLOCK_SIZE * 7}px`;
 nextTileElement.style.width = `${BLOCK_SIZE * 10}px`;
-document.querySelector('.score').style.height = `${BLOCK_SIZE * 6}px`;
+// document.querySelector('.score').style.height = `${BLOCK_SIZE * 6}px`;
+document.querySelector('.score').style.height = nextTileElement.style.height; // чтобы была одинаковая высота - для красоты
 // окно "game over"
 const go = gameOverElement.getBoundingClientRect(),
   gr = gameRect.getBoundingClientRect();
@@ -35,7 +34,7 @@ gameOverElement.style.top = `${Math.floor(gr.top + gr.height / 2 - go.height / 2
 gameOverElement.style.left = `${Math.floor(gr.left + gr.width / 2 - go.width / 2)}px`;
 
 
-// первый элемент массива - ячейка фона
+// Массив фигур. Первый элемент массива - ячейка фона
 const tiles = [
   {
     shape: [
@@ -107,7 +106,6 @@ const tiles = [
 ];
 
 // очистить игровое поле (внутренности стакана). 
-// содержимое - индекс tiles[]. Если фон, то 0
 function initGame(withStartTile = false) {
   game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill().map(x => 0));
   gameRect.innerHTML = null;
@@ -130,7 +128,7 @@ function initGame(withStartTile = false) {
     placeTile();
     nextTile = getRandomTile();
     showNextTile();
-    drawGame(); // ?
+    drawGame();
   }
 }
 
@@ -197,7 +195,7 @@ function placeTile(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].l
   }
 }
 
-// показать следующую фигуру в блоке 'next'
+// показать следующую фигуру
 function showNextTile() {
   if (nextTile) {
     let bound = nextTileElement.getBoundingClientRect();
@@ -220,7 +218,6 @@ function showNextTile() {
           e.style.border = `1px solid ${nextTile.border}`;
         } else {
           e.style.backgroundColor = tiles[0].color;
-          // e.style.border = `1px solid ${tiles[0].border}`;
         }
         nextElement.appendChild(e);
       }
@@ -244,7 +241,6 @@ function rotate(count = 1) {
     currentTile.shape = rotateArray(currentTile.shape);
   }
   if (!canPlace(currentTile.top, currentTile.left)) {
-    // console.log('cannot rotate!');
     currentTile = oldTile;
   }
   placeTile(currentTile.top, currentTile.left);
@@ -268,7 +264,6 @@ function moveDown() {
   tick++;
 }
 function moveLeft() {
-  //if (canMove('left')) {
   if (canPlace(currentTile.top, currentTile.left - 1)) {
     removeTile();
     placeTile(currentTile.top, currentTile.left - 1);
@@ -296,12 +291,13 @@ function setScore(s) {
   scoreElement.innerHTML = s;
 }
 
+// нарисовать блоки в зависимости от значений game[]
 function drawGame() {
   let blocks = gameRect.children;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
       let e = blocks[row * WIDTH + col];
-      e.innerHTML = game[row][col]; // внутренний текст для отладкиTODO: REMOVE !!!
+      // e.innerHTML = game[row][col]; // внутренний текст для отладкиTODO: REMOVE !!!
       if (game[row][col]) {
         e.style.backgroundColor = tiles[game[row][col]].color;
         e.style.border = `1px solid ${tiles[game[row][col]].border}`;
@@ -319,22 +315,16 @@ function checkBottom() {
     hitBottom = false;
     checkAndRemoveRows();
     currentTile = { ...nextTile };
-    // debugger;
     if (canPlace(0)) { // at top/center new tile
-      console.log('hit Bottom. Check if end of game');
       placeTile();
     } else {
       // конец игры
-      console.log('GAME OVER');
-      // gameOverElement.style.display='show';
+      // console.log('GAME OVER');
       gameOverElement.style.visibility = 'visible';
       clearInterval(intervalId);
       intervalId = null;
       inGame = false;
-      // tick = 0;
-      // inGame = false;
-      // nextTile = tiles[0];
-      // showNextTile();
+      tick = 0;
       return; // и ждем Esc
     }
     nextTile = getRandomTile();
@@ -370,6 +360,7 @@ function checkAndRemoveRows() {
   resetSpeed(speed);
 }
 
+// сброс скорости
 function resetSpeed(newSpeed) {
   if (intervalId) {
     clearInterval(intervalId);
@@ -379,6 +370,7 @@ function resetSpeed(newSpeed) {
   }
 }
 
+// запуск новой игры: очистка поля, инициализация таймера, убирание окна gameover
 function newGame() {
   if (intervalId) {
     clearInterval(intervalId);
@@ -392,34 +384,15 @@ function newGame() {
   log('new Game');
 }
 
-/* 
-  --- Игоровой процесс: ----
-  1. Нарисовать случайную фигуру вверху по центру
-     1.1. Если её нельзя разместить - конец игры
-  2. Если есть нажатие клавиш (свдиг/поворот/дроп) - обработать:
-    2.1 - если влево, проверить левую границу стакана или фигуру (game[row][col-1] != defaultColor)
-    2.2 - вправо аналогично: game[row][col+1] != defaultColor
-    2.3 - вниз: 
-      - если game[row+1][col] != defaultColor то оставить на месте (также должно сработать на дне стакана)
-      - иначе сдвинуть вниз
-   3. Переместить фигуру вниз на 1 клетку
-     3.1 - если нельзя разместить - конец игры
-     3.2 - если разместили, проверить наличие заполненных рядов и удалить их:
-        -- опустить вышестоящие ряды вниз на 1 клетку.
-   4. Перерисовать игровое поле     
-   5. Повторить п.1    
-      
- */
-
-
+// Обработка нажатий клавищ
 function handleKey(event) {
   if (!inGame && event.code !== 'Escape') return;
   switch (event.code) {
-    case 'ArrowDown': // rotate CW
+    case 'ArrowDown': // поворот CW
     case 'Numpad2':
       rotate(1);
       break;
-    case 'ArrowUp': // rotate CCW
+    case 'ArrowUp': // поворот CCW
     case 'Numpad8':
       rotate(3);
       break;
@@ -449,10 +422,17 @@ function handleKey(event) {
 }
 
 document.addEventListener('keydown', handleKey);
-
+// запускаем новую игру
 newGame();
 /// ---------------- TESTING -----------------
+/* 
+ниже - функция записи в лог. 
+Т.к. тестирование игры в дабагере затруднено из-за проблем отображения массива game[][],
+то при каждом тике на свервер отправляется текущее состояние игры, а отот его пишет в файл.
+
+*/
 function log(text) {
+  /*
   if (!logging) return;
   const body = new FormData();
   body.append('text', text);
@@ -472,5 +452,6 @@ function log(text) {
 
     }
   )
+  */
 }
 
