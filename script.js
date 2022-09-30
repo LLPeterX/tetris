@@ -1,6 +1,7 @@
 /* 
 TODO:
-- Ошибка в drop()! Внизу перемешиваются фигуры.
+- где-то ошибка в drop() или rotate()+drop(): Внизу перемешиваются фигуры.
+- если быстро давить на пробел, то полная жопа. всё сливается внизу.
 - избавиться от inGame. Бесполезно.
 */
 
@@ -18,10 +19,12 @@ const HEIGHT = gameRect.getBoundingClientRect().height / TILE_SIZE // внутр
 const cup = document.querySelector('.cup');
 cup.style.width = `${(WIDTH + 2) * TILE_SIZE}px`;
 cup.style.height = `${(HEIGHT + 1) * TILE_SIZE}px`;
-const INITIAL_SPEED = 800; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
-const SPEED_DECREMENT = 10; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
+const INITIAL_SPEED = 700; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
+const SPEED_DECREMENT = 20; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 let speed;
 let intervalId = null;
+let tick = 0;
+let logging = true;
 let inGame = false; // признак что мы в игре
 let game = null; // игровое поле. true - там есть блок, false - нет. Иницифлизируется в initGame()
 let currentTile = null; // текущая падающая фигура
@@ -285,6 +288,7 @@ function rotate(count = 1) {
   }
   placeTile(currentTile.top, currentTile.left);
   oldTile = null;
+  log(`rotate ${count}`);
 }
 
 // сместить фигуру вниз
@@ -292,50 +296,51 @@ function moveDown() {
   if (canMove("down")) {
     removeTile();
     placeTile(currentTile.top + 1, currentTile.left);
-
+    log("down");
   } else {
+    log("hit bottom");
     hitBottom = true;
   }
   // симулировать keyboardEvent чтобы сработала кнопка
   //window.dispatchEvent(new KeyboardEvent('keydown', { 'key': '`' }));
   checkBottom();
   drawGame();
+  tick++;
 }
 function moveLeft() {
   if (canMove('left')) {
     removeTile();
     placeTile(currentTile.top, currentTile.left - 1);
+    log('left');
   }
 }
 function moveRight() {
   if (canMove('right')) {
     removeTile();
     placeTile(currentTile.top, currentTile.left + 1);
+    log('right');
   }
 }
 function drop() {
   // переместить фигуру вниз до тех пор, пока не упрется вниз
-  let canDrop = true;
   const tileHeight = currentTile.shape.length;
-  const below = currentTile.top + tileHeight; // ряд под фигурой
-  if (below >= HEIGHT - 1) {
-    return false;
-  }
-  let row = below;
-  for (; row < HEIGHT - 1; row++) {
-    for (let col = currentTile.left; col < currentTile.left + currentTile.shape[0].length; col++) {
-      if (game[row][col]) {
-        // canDrop = false;
+  const tileWidth = currentTile.shape[0].length;
+  let row = currentTile.top + tileHeight; // нижняя граница фигуры
+  let hit = 0;
+  debugger;
+  for (; row < HEIGHT && !hit; row++) {
+    for (let col = currentTile.left; col < currentTile.left + tileWidth; col++) {
+      if (row < HEIGHT - 1 && game[row + 1][col]) {
+        hit = 1;
         break;
       }
+
     }
-    if (!canDrop) break;
   }
   removeTile();
-  console.log(`drop: row=${row} tile top=${currentTile.top}`);
-  placeTile(row - tileHeight + 1, currentTile.left);
+  placeTile(row - tileHeight, currentTile.left);
   drawGame();
-
+  log('drop');
 }
 
 
@@ -391,6 +396,7 @@ function checkBottom() {
       // конец игры
       console.log('GAME OVER');
       clearInterval(intervalId);
+      tick = 0;
       intervalId = null;
       inGame = false;
       return; // и ждем Esc
@@ -407,6 +413,7 @@ function checkAndRemoveRows() {
     found = false;
     for (let row = HEIGHT - 1; row >= 0; row--) {
       if (game[row].every(cell => cell !== 0)) {
+        log(`remove row ${row}`);
         // console.log('remove row', row);
         // сдвигаем содержимое выше row вниз на 1 ряд
         for (let y = row; y > 0; y--) {
@@ -444,6 +451,8 @@ function newGame() {
   inGame = true;
   speed = INITIAL_SPEED;
   resetSpeed(speed);
+  tick = 0;
+  log('new Game');
 }
 
 /* 
@@ -495,13 +504,13 @@ function handleKey(event) {
       moveRight();
       break;
     case 'Space':
-      // while (!hitBottom) {
-      //   moveDown();
-      // }
       drop();
       break;
     case 'Escape':
       newGame();
+      break;
+    case 'KeyP':
+      logging = false;
       break;
     default:
       console.log(event.code);
@@ -527,10 +536,29 @@ function handleKey(event) {
 
 // button.addEventListener('click', handleClick);
 document.addEventListener('keydown', handleKey);
-
 newGame();
 /// ---------------- TESTING -----------------
+function log(text) {
+  if (!logging) return;
+  const body = new FormData();
+  body.append('text', text);
+  body.append('time', new Date().toLocaleTimeString());
+  body.append('tick', tick);
+  body.append('game', JSON.stringify(game));
+  body.append('tile', JSON.stringify(currentTile));
+  body.append('logging', logging);
+  fetch("https://test.ru/tetlog.php",
+    {
+      method: 'POST',
+      mode: 'no-cors',
+      body,
+      headers: {
+        'Content-Type': 'application/form-data',
+      }
 
+    }
+  )
+}
 
 
 // // начальные блоки
