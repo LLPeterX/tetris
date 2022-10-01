@@ -1,3 +1,8 @@
+/* 
+TODO
+ - нарисовать заголовок (drawTitle) - поправить CSS
+
+*/
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.querySelector(".score");
 const nextElement = document.querySelector('.next-shape');
@@ -104,6 +109,7 @@ const tiles = [
   }
 
 ];
+
 
 // очистить игровое поле (внутренности стакана). 
 function initGame(withStartTile = false) {
@@ -430,31 +436,21 @@ function drawTitle() {
     ' 1  2    3  4   5  5 6  ',
     ' 1  222  3  4   5  5 666'
   ];
-  const titleElement = document.querySelector('.title');
-  for (let i = 0; i < letters.length; i++) {
-    for (let j = 0; j < letters[0].length; j++) {
-      let x = letters[i][j];
-      if (x !== ' ') {
-        let tile = tiles[+x];
-        let e = document.createElement('div');
-        e.style.width = `${BLOCK_SIZE}px`;
-        e.style.height = `${BLOCK_SIZE}px`;
-        e.style.position = 'absolute';
-        e.style.left = `${j * BLOCK_SIZE}px`;
-        e.style.top = `${i * BLOCK_SIZE}px`;
-        e.style.backgroundColor = tile.color;
-        e.style.border = `1px solid ${tile.border}`;
-        titleElement.appendChild(e);
+  const titleTiles = document.querySelector('.title').children;
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 24; j++) {
+      if (letters[i][j] !== ' ') {
+        let e = titleTiles[i * 24 + j];
+        e.style.backgroundColor = tiles[letters[i][j]].color;
+        e.style.border = `1px solid ${tiles[letters[i][j]].border}`;
       }
     }
   }
-  titleElement.style.top = "20px";
-  titleElement.style.left = `${Math.floor(document.body.getBoundingClientRect().width / 2 - titleElement.getBoundingClientRect().width / 2)}px`;
 }
 
+// -------------- START GAME -----------------
+drawTitle();
 document.addEventListener('keydown', handleKey);
-// drawTitle();
-// запускаем новую игру
 newGame();
 /// ---------------- TESTING -----------------
 /* 

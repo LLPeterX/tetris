@@ -8,12 +8,13 @@
   box-sizing: border-box;
 }
 
-body {
-  display: relative;
+.wrapper {
   text-align: center;
   /* flex-direction: column;
   justify-content: center; */
   font-family: "Courier New", Courier, monospace;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .container {
@@ -24,9 +25,17 @@ body {
 }
 
 .title {
-  padding: 20px;
-  font-size: 32pt;
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  width: 483px;
+  height: 100px;
+  margin: 20px auto;
+}
+
+.tb {
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
 }
 
 .game_field {
