@@ -1,8 +1,3 @@
-/* 
-TODO
- - нарисовать заголовок (drawTitle) - поправить CSS
-
-*/
 const gameRect = document.querySelector('.game_field');
 const scoreElement = document.querySelector(".score");
 const nextElement = document.querySelector('.next-shape');
@@ -12,12 +7,12 @@ const BLOCK_SIZE = 20; // размер одного блока в пикселя
 const WIDTH = 10 // внутренняя ширина стакана в блоках
 const HEIGHT = 20 // внутренняя высота стакана в блоках
 const INITIAL_SPEED = 700; // начальная скорость падения фигуры в ms - задержка перед переходом вниз
-const SPEED_DECREMENT = 10; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
+const SPEED_DECREMENT = 5; // с каждым удаленным рядом задержка будет уменьшаться на эту величину
 
 let speed = INITIAL_SPEED;
 let intervalId = null;
 let tick = 0;
-let logging = true;
+let logging = true; // режим отладки
 let inGame = false; // признак что мы в игре
 let game = null; // игровое поле. 
 let currentTile = null; // текущая падающая фигура
@@ -30,9 +25,8 @@ let hitBottom = false;
 document.querySelector('.container').style.width = `${BLOCK_SIZE * WIDTH + (BLOCK_SIZE * 24)}px`;
 nextTileElement.style.height = `${BLOCK_SIZE * 7}px`;
 nextTileElement.style.width = `${BLOCK_SIZE * 10}px`;
-// document.querySelector('.score').style.height = `${BLOCK_SIZE * 6}px`;
 document.querySelector('.score').style.height = nextTileElement.style.height; // чтобы была одинаковая высота - для красоты
-// окно "game over"
+// 2. окно "game over"
 const go = gameOverElement.getBoundingClientRect(),
   gr = gameRect.getBoundingClientRect();
 gameOverElement.style.top = `${Math.floor(gr.top + gr.height / 2 - go.height / 2)}px`;
@@ -112,8 +106,13 @@ const tiles = [
 
 
 // очистить игровое поле (внутренности стакана). 
-function initGame(withStartTile = false) {
-  game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill().map(x => 0));
+function initGame() {
+  game = new Array(HEIGHT).fill().map(row => new Array(WIDTH).fill(0));
+  /* 
+    здесь не самый оптимальный вариант с созданием элементов. 
+    Лучше бы заранее создать 200 div'ов .block и менять их стили.
+    Но тогда это лишило бы возможности менять размеры стакана (WIDTH и HEIGHT) - вдруг захочется.
+  */
   gameRect.innerHTML = null;
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
@@ -129,18 +128,17 @@ function initGame(withStartTile = false) {
     }
   }
   setScore(0);
-  if (withStartTile) {
-    currentTile = getRandomTile();
-    placeTile();
-    nextTile = getRandomTile();
-    showNextTile();
-    drawGame();
-  }
+  currentTile = getRandomTile();
+  placeTile();
+  nextTile = getRandomTile();
+  showNextTile();
+  drawGame();
 }
 
 function getRandomTile() {
-  let index = Math.floor(Math.random() * (tiles.length - 1)) + 1;
-  let tile = { ...tiles[index] };
+  const index = Math.floor(Math.random() * (tiles.length - 1)) + 1;
+  // let tile = { ...tiles[index] };
+  const tile = copyObject(tiles[index]);
   tile.top = 0;
   tile.left = Math.floor(WIDTH / 2 - tile.shape[0].length / 2);
   return tile;
@@ -155,8 +153,8 @@ function canPlace(top = 0, left = Math.floor(WIDTH / 2 - currentTile.shape[0].le
   if (top < 0 || top + tileHeight > HEIGHT || left < 0 || left + tileWidth > WIDTH) {
     return false;
   }
-  top > 0 && removeTile(); // есди фигура уже есть, убираем её, чтобы избежать своих же клеток.
-  // есть ли пересечения с другими имеющимися фигурами?
+  top > 0 && removeTile(); // если фигура уже есть, убираем её, чтобы избежать своих же клеток.
+  // Находим пересечения с другими имеющимися фигурами
   for (let i = 0; i < tileHeight; i++) {
     for (let j = 0; j < tileWidth; j++) {
       if (currentTile.shape[i][j]) {
@@ -227,7 +225,6 @@ function showNextTile() {
         }
         nextElement.appendChild(e);
       }
-
     }
   }
 }
@@ -303,7 +300,6 @@ function drawGame() {
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
       let e = blocks[row * WIDTH + col];
-      // e.innerHTML = game[row][col]; // внутренний текст для отладкиTODO: REMOVE !!!
       if (game[row][col]) {
         e.style.backgroundColor = tiles[game[row][col]].color;
         e.style.border = `1px solid ${tiles[game[row][col]].border}`;
@@ -313,19 +309,18 @@ function drawGame() {
       }
     }
   }
-  blocks = null; // for GC
 }
 
+// проверка касания нижней части фигуры дна стакана или другой низлежащей фигуры. Учитвая рельеф.
 function checkBottom() {
   if (hitBottom && inGame) {
     hitBottom = false;
     checkAndRemoveRows();
     currentTile = { ...nextTile };
-    if (canPlace(0)) { // at top/center new tile
+    // попробовать разместить новую фигуру вверху по центру. Если неуспешно - конец игры
+    if (canPlace(0)) {
       placeTile();
     } else {
-      // конец игры
-      // console.log('GAME OVER');
       gameOverElement.style.visibility = 'visible';
       clearInterval(intervalId);
       intervalId = null;
@@ -381,7 +376,7 @@ function newGame() {
   if (intervalId) {
     clearInterval(intervalId);
   }
-  initGame(true);
+  initGame();
   gameOverElement.style.visibility = 'hidden';
   inGame = true;
   speed = INITIAL_SPEED;
@@ -417,7 +412,8 @@ function handleKey(event) {
       newGame();
       break;
     case 'KeyP':
-      logging = false;
+      logging = !logging;
+      console.log(`logging ${logging ? "enabled" : "disabled"}`);
       break;
     // default:
     //   console.log(event.code);
@@ -427,6 +423,8 @@ function handleKey(event) {
 
 }
 
+// заголовок вверху.
+// Нужные div'ы уже есть в html
 function drawTitle() {
   const letters = [
     // T   E   T   Р   И  С 
@@ -452,11 +450,14 @@ function drawTitle() {
 drawTitle();
 document.addEventListener('keydown', handleKey);
 newGame();
+
 /// ---------------- TESTING -----------------
 /* 
 ниже - функция записи в лог. 
-Т.к. тестирование игры в дабагере затруднено из-за проблем отображения массива game[][],
-то при каждом тике на свервер отправляется текущее состояние игры, а отот его пишет в файл.
+Т.к. тестирование игры в дабагере затруднено из-за проблем отображения в консоли массива game[][],
+я написал сервер на php, который пишет в файл текущее состояние игры при каждом тике таймера
+или нажатии клавиш.
+Клавишей "P" логирование останавливается
 
 */
 function log(text) {
@@ -469,7 +470,7 @@ function log(text) {
   body.append('game', JSON.stringify(game));
   body.append('tile', JSON.stringify(currentTile));
   body.append('logging', logging);
-  fetch("https://test.ru/tetlog.php",
+  fetch("https://test.ru/tetrislog.php",
     {
       method: 'POST',
       mode: 'no-cors',
